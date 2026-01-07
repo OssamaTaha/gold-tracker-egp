@@ -274,8 +274,11 @@ if not df.empty:
     last_date = df['timestamp'].max()
     start_zoom = last_date - timedelta(days=30)
     
+    # Add buffer to the right so the Text Label isn't cut off
+    domain_end = last_date + timedelta(days=4)
+    
     # Configure X-Axis Scale with Default Domain
-    x_scale = alt.Scale(domain=(start_zoom, last_date))
+    x_scale = alt.Scale(domain=(start_zoom, domain_end))
     
     # Base Chart
     base = alt.Chart(df_plot).encode(
