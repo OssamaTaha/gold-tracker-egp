@@ -294,7 +294,7 @@ if not df.empty:
         color=alt.Color('Karat:N')
     )
     
-    lines = base.mark_line(interpolate='monotone')
+    lines = base.mark_line(interpolate='monotone', strokeWidth=3)
     
     # Text Labels at the End (Latest Price)
     last_points = df_plot.sort_values('timestamp').groupby('Karat').tail(1)
