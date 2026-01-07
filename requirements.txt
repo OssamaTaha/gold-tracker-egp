@@ -1,10 +1,9 @@
 streamlit==1.41.0
 pandas==2.2.3
-plotly==5.24.1pandas
-requests
-beautifulsoup4
-plotly
-scikit-learn
+plotly==5.24.1
+requests==2.32.3
+beautifulsoup4==4.12.3
+scikit-learn==1.6.1
 altair
-bokeh==1.6.1
+bokeh
 yfinance==0.2.51
