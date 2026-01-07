@@ -245,19 +245,20 @@ if not df.empty:
         for i, karat in enumerate(chart_karats):
             # Data for this karat
             k_df = df_filtered[['timestamp', karat]].dropna().sort_values('timestamp')
+            k_df = k_df.rename(columns={karat: 'price'}) # Standardize for Hover
             
             if not k_df.empty:
                 # Add Line
                 source = ColumnDataSource(k_df)
-                p.line(x='timestamp', y=karat, source=source, line_width=2, color=colors[i % 10], legend_label=karat)
-                p.circle(x='timestamp', y=karat, source=source, size=4, color=colors[i % 10])
+                p.line(x='timestamp', y='price', source=source, line_width=2, color=colors[i % 10], legend_label=karat)
+                p.circle(x='timestamp', y='price', source=source, size=4, color=colors[i % 10])
                 
                 # Store last point for label
                 last_pt = k_df.iloc[-1]
                 labels_data.append({
                     'timestamp': last_pt['timestamp'],
-                    'price': last_pt[karat],
-                    'text': f"{last_pt[karat]:,.0f}",
+                    'price': last_pt['price'],
+                    'text': f"{last_pt['price']:,.0f}",
                     'color': colors[i % 10]
                 })
 
@@ -271,7 +272,7 @@ if not df.empty:
             p.add_layout(labels)
             
             # Hover Tool
-            hover = HoverTool(tooltips=[("Date", "@timestamp{%F}"), ("Price", "@y{0,0} EGP")],
+            hover = HoverTool(tooltips=[("Date", "@timestamp{%F}"), ("Price", "@price{0,0} EGP")],
                               formatters={'@timestamp': 'datetime'})
             p.add_tools(hover)
 
@@ -429,10 +430,10 @@ if not df.empty:
         p_pred.yaxis.formatter = NumeralTickFormatter(format="0,0")
         
         # 1. Historical
-        hist_df = df.tail(30)
+        hist_df = df.tail(30).rename(columns={target_karat: 'Price'})
         source_hist = ColumnDataSource(hist_df)
-        p_pred.line(x='timestamp', y=target_karat, source=source_hist, line_width=2, color='#1f77b4', legend_label="Historical")
-        p_pred.circle(x='timestamp', y=target_karat, source=source_hist, size=4, color='#1f77b4')
+        p_pred.line(x='timestamp', y='Price', source=source_hist, line_width=2, color='#1f77b4', legend_label="Historical")
+        p_pred.circle(x='timestamp', y='Price', source=source_hist, size=4, color='#1f77b4')
         
         # 2. Forecast
         source_pred = ColumnDataSource(forecast_df)
@@ -458,7 +459,7 @@ if not df.empty:
         p_pred.min_border_right = 0
         
         # Hover
-        hover_pred = HoverTool(tooltips=[("Date", "@timestamp{%F}"), ("Price", "@y{0,0}")],
+        hover_pred = HoverTool(tooltips=[("Date", "@timestamp{%F}"), ("Price", "@Price{0,0}")],
                                formatters={'@timestamp': 'datetime'})
         p_pred.add_tools(hover_pred)
 
