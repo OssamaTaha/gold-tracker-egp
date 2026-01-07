@@ -307,17 +307,6 @@ if not df.empty:
     
     # Combined (No Area layer)
     final_chart = lines + text_labels
-    
-    text_labels = alt.Chart(last_points).mark_text(
-        align='left', dx=5, dy=-5, fontSize=12, fontWeight='bold'
-    ).encode(
-        x='timestamp:T',
-        y='Price:Q',
-        text=alt.Text('Price:Q', format=',.0f'),
-        color='Karat:N'
-    )
-    
-    final_chart = areas + lines + text_labels
 
     # --- TECHNICAL OVERLAYS (ALTAIR) ---
     ohlc_reset = ohlc.reset_index()
