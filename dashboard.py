@@ -7,6 +7,7 @@ import sqlite3
 from bokeh.plotting import figure
 from bokeh.models import ColumnDataSource, Range1d, LabelSet, HoverTool, DatetimeTickFormatter
 from bokeh.palettes import Category10
+from streamlit_bokeh import st_bokeh_chart
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 import numpy as np
@@ -295,7 +296,7 @@ if not df.empty:
         p.yaxis.major_label_text_color = "white"
         p.title.text_color = "white"
         
-        st.bokeh_chart(p, use_container_width=True)
+        st_bokeh_chart(p, use_container_width=True)
     else:
         st.info("No data available for the selected range.")
 
@@ -454,7 +455,7 @@ if not df.empty:
                                formatters={'@timestamp': 'datetime'})
         p_pred.add_tools(hover_pred)
 
-        st.bokeh_chart(p_pred, use_container_width=True)
+        st_bokeh_chart(p_pred, use_container_width=True)
         
         st.write("Predicted Prices:")
         st.dataframe(forecast_df[['timestamp', 'Price']])
