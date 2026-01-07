@@ -216,168 +216,72 @@ if not df.empty:
     
     # 1. Historical Trend
     st.markdown("---")
+    st.subheader(f"📈 Price History")
     
-    # 1. Advanced Trading Chart (Line Only)
-    st.subheader(f"📈 Advanced Market Chart")
-    
-    # Defaults for Analysis
-    freq = "1d"
-    target_asset = selected_karats[0] if selected_karats else 'karat_24'
-
-    # --- SHARED TECHNICAL ANALYSIS ---
-    # Resample Data to OHLC (Needed for Indicators)
-    df_asset = df_filtered[['timestamp', target_asset]].copy()
-    df_asset.set_index('timestamp', inplace=True)
-    
-    # Resample
-    ohlc = df_asset[target_asset].resample(freq).agg(['first', 'max', 'min', 'last'])
-    ohlc.columns = ['Open', 'High', 'Low', 'Close']
-    ohlc.dropna(inplace=True)
-    
-    # --- TECHNICAL INDICATORS CALCULATIONS ---
-    # 1. SMA 20
-    ohlc['SMA20'] = ohlc['Close'].rolling(window=20).mean()
-    # 2. EMA 50
-    ohlc['EMA50'] = ohlc['Close'].ewm(span=50, adjust=False).mean()
-    # 3. Bollinger Bands
-    ohlc['BB_Middle'] = ohlc['Close'].rolling(window=20).mean()
-    ohlc['BB_Std'] = ohlc['Close'].rolling(window=20).std()
-    ohlc['BB_Upper'] = ohlc['BB_Middle'] + (2 * ohlc['BB_Std'])
-    ohlc['BB_Lower'] = ohlc['BB_Middle'] - (2 * ohlc['BB_Std'])
-    # 4. RSI
-    delta = ohlc['Close'].diff()
-    gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
-    loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
-    rs = gain / loss
-    ohlc['RSI'] = 100 - (100 / (1 + rs))
-
-    # --- INDICATOR CONTROLS ---
-    st.write("### 🛠️ Technical Indicators")
-    c_ind1, c_ind2, c_ind3, c_ind4 = st.columns(4)
-    
-    show_sma = c_ind1.checkbox("SMA 20", value=True, help="Avg Price (20d). Support level in uptrends.")
-    show_ema = c_ind2.checkbox("EMA 50", value=False, help="Avg Price (50d). Medium-term trend.")
-    show_bb = c_ind3.checkbox("Bollinger Bands", value=False, help="Volatility Bands. Buy at Lower, Sell at Upper.")
-    show_rsi = c_ind4.checkbox("Show RSI Panel", value=True, help="Overbought (>70) / Oversold (<30) Gauge.")
-
-    # --- PLOTTING ---
-    # --- PLOTTING (ALTAIR) ---
-    import altair as alt
-
-    # Prepare Data for Altair (Long Format)
+    # Defaults
     chart_karats = selected_karats if selected_karats else ['karat_24', 'karat_21', 'karat_18']
     
-    # Filter and Melt
-    df_plot = df_filtered[['timestamp'] + chart_karats].melt('timestamp', var_name='Karat', value_name='Price')
-    
-    # Dynamic Scale: Fit the chart to the data (No arbitrary 30-day crop)
-    if not df_plot.empty:
-        min_ts = df_plot['timestamp'].min()
-        max_ts = df_plot['timestamp'].max()
+    if not df_filtered.empty:
+        # Prepare Data
+        source = df_filtered[['timestamp'] + chart_karats].melt('timestamp', var_name='Karat', value_name='Price')
         
-        # Add buffer to the right for the Text Label (approx 10% of range or 4 days)
-        # We use a fixed delta to ensure the label fits comfortably
-        domain_end = max_ts + timedelta(days=len(df_plot)/(len(chart_karats)*5) if len(df_plot) < 50 else 5)
-        # Fallback to simple 4 days if logic is complex, but smart buffer is better.
-        # Let's stick to simple 4 days for robustness as requested
-        domain_end = max_ts + timedelta(days=4)
+        # Base Chart
+        base = alt.Chart(source).encode(
+            x=alt.X('timestamp:T', title='Date', axis=alt.Axis(format='%d %b')),
+            y=alt.Y('Price:Q', title='Price (EGP)', scale=alt.Scale(zero=False)),
+            color=alt.Color('Karat:N', legend=alt.Legend(orient='bottom')),
+            tooltip=['timestamp', 'Karat', alt.Tooltip('Price', format=',.0f')]
+        )
         
-        x_scale = alt.Scale(domain=(min_ts, domain_end))
+        # Line with Points
+        lines = base.mark_line(point=True).encode()
+        
+        # Latest Value Labels
+        last_pts = source.sort_values('timestamp').groupby('Karat').tail(1)
+        labels = base.mark_text(align='left', dx=8, fontWeight='bold').encode(
+            text=alt.Text('Price:Q', format=',.0f')
+        ).transform_filter(
+            alt.FieldOneOfPredicate(field='timestamp', oneOf=[last_pts['timestamp'].max()])
+        )
+        
+        # Combine
+        chart = (lines + labels).interactive()
+        
+        st.altair_chart(chart, use_container_width=True)
     else:
-        x_scale = alt.Scale() # Default auto
-    
-    # Base Chart
-    base = alt.Chart(df_plot).encode(
-        x=alt.X('timestamp:T', title=None, axis=alt.Axis(format='%d %b'), scale=x_scale),
-        y=alt.Y('Price:Q', title='EGP', scale=alt.Scale(zero=False)),
-        color=alt.Color('Karat:N', legend=alt.Legend(orient='bottom')),
-        tooltip=['timestamp', 'Karat', alt.Tooltip('Price', format=',.0f')]
-    )
-    
-    # Simple Line + Points (Similar to AI Chart style)
-    lines = base.mark_line(point=True).encode(
-        color=alt.Color('Karat:N')
-    )
-    
-    # Text Labels at the End (Latest Price)
-    last_points = df_plot.sort_values('timestamp').groupby('Karat').tail(1)
-    
-    text_labels = alt.Chart(last_points).mark_text(
-        align='left', dx=5, dy=-5, fontSize=12, fontWeight='bold'
-    ).encode(
-        x='timestamp:T',
-        y='Price:Q',
-        text=alt.Text('Price:Q', format=',.0f'),
-        color='Karat:N'
-    )
-    
-    # Combined (No Area layer)
-    final_chart = lines + text_labels
-
-    # --- TECHNICAL OVERLAYS (ALTAIR) ---
-    ohlc_reset = ohlc.reset_index()
-    
-    tech_layers = []
-    
-    if show_sma:
-        sma_line = alt.Chart(ohlc_reset).mark_line(color='orange', strokeDash=[5,5]).encode(
-            x='timestamp:T',
-            y='SMA20:Q',
-            tooltip=['timestamp', alt.Tooltip('SMA20', format=',.0f', title=f'SMA 20 ({target_asset})')]
-        )
-        tech_layers.append(sma_line)
-
-    if show_ema:
-        ema_line = alt.Chart(ohlc_reset).mark_line(color='cyan', strokeDash=[2,2]).encode(
-            x='timestamp:T',
-            y='EMA50:Q',
-            tooltip=['timestamp', alt.Tooltip('EMA50', format=',.0f', title=f'EMA 50 ({target_asset})')]
-        )
-        tech_layers.append(ema_line)
-
-    if show_bb:
-        # Band (Area)
-        bb_band = alt.Chart(ohlc_reset).mark_area(opacity=0.1, color='gray').encode(
-            x='timestamp:T',
-            y='BB_Lower:Q',
-            y2='BB_Upper:Q'
-        )
-        # Edges
-        bb_upper = alt.Chart(ohlc_reset).mark_line(color='gray', size=0.5).encode(x='timestamp:T', y='BB_Upper:Q')
-        bb_lower = alt.Chart(ohlc_reset).mark_line(color='gray', size=0.5).encode(x='timestamp:T', y='BB_Lower:Q')
-        
-        tech_layers.extend([bb_band, bb_upper, bb_lower])
-
-    # Combine all layers
-    for layer in tech_layers:
-        final_chart += layer
-
-    # Display Main Chart with Horizontal Interaction ONLY
-    # bind_y=False ensures vertical swiping scrolls the page, NOT the chart
-    st.altair_chart(final_chart.interactive(bind_y=False), use_container_width=True)
-
-    # --- RSI SUBPLOT (ALTAIR) ---
-    if show_rsi:
-        # RSI Chart
-        rsi_base = alt.Chart(ohlc_reset).encode(x='timestamp:T')
-        
-        rsi_line = rsi_base.mark_line(color='purple').encode(
-            y=alt.Y('RSI:Q', scale=alt.Scale(domain=[0, 100]), title='RSI')
-        )
-        
-        # Guidelines (70/30)
-        rule_70 = alt.Chart(pd.DataFrame({'y': [70]})).mark_rule(color='red', strokeDash=[2,2]).encode(y='y')
-        rule_30 = alt.Chart(pd.DataFrame({'y': [30]})).mark_rule(color='green', strokeDash=[2,2]).encode(y='y')
-        
-        rsi_chart = (rsi_line + rule_70 + rule_30).properties(height=150)
-        
-        st.altair_chart(rsi_chart.interactive(), use_container_width=True)
+        st.info("No data available for the selected range.")
 
 
     # --- AI ANALYST (SHARED) ---
-    if not ohlc.empty and len(ohlc) > 20:
+    # Need to calculate technicals for AI logic (since we removed the chart-based calc)
+    if not df_filtered.empty:
+        # Defaults for Analysis
+        target_asset = selected_karats[0] if selected_karats else 'karat_24'
+        df_asset = df_filtered[['timestamp', target_asset]].copy()
+        df_asset.set_index('timestamp', inplace=True)
+        
+        # Resample
+        ohlc = df_asset[target_asset].resample('1D').agg(['first', 'max', 'min', 'last'])
+        ohlc.columns = ['Open', 'High', 'Low', 'Close']
+        ohlc.dropna(inplace=True)
+        
+        # Calculate Indicators
+        ohlc['SMA20'] = ohlc['Close'].rolling(window=20).mean()
+        ohlc['BB_Middle'] = ohlc['Close'].rolling(window=20).mean()
+        ohlc['BB_Std'] = ohlc['Close'].rolling(window=20).std()
+        ohlc['BB_Upper'] = ohlc['BB_Middle'] + (2 * ohlc['BB_Std'])
+        ohlc['BB_Lower'] = ohlc['BB_Middle'] - (2 * ohlc['BB_Std'])
+        
+        delta = ohlc['Close'].diff()
+        gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+        loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+        rs = gain / loss
+        ohlc['RSI'] = 100 - (100 / (1 + rs))
+
+        if not ohlc.empty and len(ohlc) > 20:
             last_close = ohlc['Close'].iloc[-1]
             last_rsi = ohlc['RSI'].iloc[-1]
+            # ... rest of logic uses already defined vars ...
             
             # BB Values
             bb_upper = ohlc['BB_Upper'].iloc[-1]
@@ -426,8 +330,8 @@ if not df.empty:
             sell_delta = f"{diff_sell:,.0f} EGP potential" if diff_sell > 0 else "At Resistance!"
             sig_col3.metric("📈 Take Profit Price", f"{sell_target:,.0f} EGP", "Resistance Level (Upper Band)")
             
-    else:
-        st.info("Insufficient data for technical analysis (Need > 20 periods).")
+        else:
+            st.info("Insufficient data for technical analysis (Need > 20 periods).")
 
     # 2. AI Prediction Section
     st.subheader("🤖 AI Price Prediction (Beta)")
