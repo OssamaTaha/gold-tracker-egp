@@ -5,7 +5,7 @@ import streamlit as st
 import pandas as pd
 import sqlite3
 from bokeh.plotting import figure
-from bokeh.models import ColumnDataSource, Range1d, LabelSet, HoverTool, DatetimeTickFormatter
+from bokeh.models import ColumnDataSource, Range1d, LabelSet, HoverTool, DatetimeTickFormatter, Label
 from bokeh.palettes import Category10
 from streamlit_bokeh import streamlit_bokeh as st_bokeh_chart
 from sklearn.linear_model import LinearRegression
@@ -231,7 +231,7 @@ if not df.empty:
     
     if not df_filtered.empty:
         # Prepare Bokeh Figure
-        p = figure(x_axis_type="datetime", title="", height=400, toolbar_location="right", tools="pan,wheel_zoom,reset,save")
+        p = figure(x_axis_type="datetime", title="", height=300, toolbar_location="right", tools="pan,wheel_zoom,reset,save")
         p.grid.grid_line_alpha = 0.3
         p.background_fill_color = "#0E1117" # Match Dark Theme
         p.border_fill_color = "#0E1117"
@@ -417,10 +417,16 @@ if not df.empty:
         
         predictions = model.predict(future_ordinal)
         
+        # Create Forecast DataFrame
+        forecast_df = pd.DataFrame({
+            'timestamp': future_dates,
+            'Price': predictions
+        })
+        
         # --- PREDICTION VISUALIZATION (BOKEH) ---
         p_pred = figure(x_axis_type="datetime", title="Gold Price Forecast (Next 7 Days)", 
-                        height=400, toolbar_location="right", tools="pan,wheel_zoom,reset,save")
-        p_pred.grid.grid_line_alpha = 0.3
+                        height=300, toolbar_location="right", tools="pan,wheel_zoom,reset,save")
+        p_pred.grid.grid_line_alpha = 0.1 # Fainter grid
         p_pred.background_fill_color = "#0E1117"
         p_pred.border_fill_color = "#0E1117"
         
@@ -436,11 +442,12 @@ if not df.empty:
         p_pred.circle(x='timestamp', y='Price', source=source_pred, size=6, color='#ff7f0e')
         
         # Label for final prediction
-        last_pred = forecast_df.iloc[-1]
-        label_pred = Label(x=last_pred['timestamp'], y=last_pred['Price'], 
-                           text=f"{last_pred['Price']:,.0f}", text_color='#ff7f0e', 
-                           x_offset=8, y_offset=-8, text_font_style='bold')
-        p_pred.add_layout(label_pred)
+        if not forecast_df.empty:
+            last_pred = forecast_df.iloc[-1]
+            label_pred = Label(x=last_pred['timestamp'], y=last_pred['Price'], 
+                               text=f"{last_pred['Price']:,.0f}", text_color='#ff7f0e', 
+                               x_offset=8, y_offset=-8, text_font_style='bold')
+            p_pred.add_layout(label_pred)
 
         # Styling
         p_pred.legend.location = "top_left"
@@ -449,6 +456,8 @@ if not df.empty:
         p_pred.xaxis.major_label_text_color = "white"
         p_pred.yaxis.major_label_text_color = "white"
         p_pred.title.text_color = "white"
+        p_pred.min_border_left = 0
+        p_pred.min_border_right = 0
         
         # Hover
         hover_pred = HoverTool(tooltips=[("Date", "@timestamp{%F}"), ("Price", "@y{0,0}")],
