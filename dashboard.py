@@ -270,15 +270,21 @@ if not df.empty:
     # Filter and Melt
     df_plot = df_filtered[['timestamp'] + chart_karats].melt('timestamp', var_name='Karat', value_name='Price')
     
-    # Define Default Zoom (Last 30 Days)
-    last_date = df['timestamp'].max()
-    start_zoom = last_date - timedelta(days=30)
-    
-    # Add buffer to the right so the Text Label isn't cut off
-    domain_end = last_date + timedelta(days=4)
-    
-    # Configure X-Axis Scale with Default Domain
-    x_scale = alt.Scale(domain=(start_zoom, domain_end))
+    # Dynamic Scale: Fit the chart to the data (No arbitrary 30-day crop)
+    if not df_plot.empty:
+        min_ts = df_plot['timestamp'].min()
+        max_ts = df_plot['timestamp'].max()
+        
+        # Add buffer to the right for the Text Label (approx 10% of range or 4 days)
+        # We use a fixed delta to ensure the label fits comfortably
+        domain_end = max_ts + timedelta(days=len(df_plot)/(len(chart_karats)*5) if len(df_plot) < 50 else 5)
+        # Fallback to simple 4 days if logic is complex, but smart buffer is better.
+        # Let's stick to simple 4 days for robustness as requested
+        domain_end = max_ts + timedelta(days=4)
+        
+        x_scale = alt.Scale(domain=(min_ts, domain_end))
+    else:
+        x_scale = alt.Scale() # Default auto
     
     # Base Chart
     base = alt.Chart(df_plot).encode(
