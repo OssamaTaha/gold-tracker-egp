@@ -284,7 +284,7 @@ if not df.empty:
             
             # If we have duration, add it to the right
             if duration.total_seconds() > 0:
-                p.x_range = Range1d(start=min_ts, end=max_ts + duration)
+                p.x_range = Range1d(start=min_ts, end=max_ts + (duration / 2))
             else:
                 p.x_range = Range1d(start=max_ts - timedelta(days=4), end=max_ts + timedelta(days=4))
 
