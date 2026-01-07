@@ -7,7 +7,7 @@ import sqlite3
 from bokeh.plotting import figure
 from bokeh.models import ColumnDataSource, Range1d, LabelSet, HoverTool, DatetimeTickFormatter
 from bokeh.palettes import Category10
-from streamlit_bokeh import st_bokeh_chart
+from streamlit_bokeh import streamlit_bokeh as st_bokeh_chart
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 import numpy as np
