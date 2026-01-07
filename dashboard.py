@@ -5,7 +5,7 @@ import streamlit as st
 import pandas as pd
 import sqlite3
 from bokeh.plotting import figure
-from bokeh.models import ColumnDataSource, Range1d, LabelSet, HoverTool, DatetimeTickFormatter, Label
+from bokeh.models import ColumnDataSource, Range1d, LabelSet, HoverTool, DatetimeTickFormatter, Label, NumeralTickFormatter
 from bokeh.palettes import Category10
 from streamlit_bokeh import streamlit_bokeh as st_bokeh_chart
 from sklearn.linear_model import LinearRegression
@@ -236,7 +236,7 @@ if not df.empty:
         p.background_fill_color = "#0E1117" # Match Dark Theme
         p.border_fill_color = "#0E1117"
         p.xaxis.axis_label = "Date"
-        p.yaxis.axis_label = "Price (EGP)"
+        p.yaxis.formatter = NumeralTickFormatter(format="0,0")
         
         # Colors
         colors = Category10[10]
@@ -428,7 +428,7 @@ if not df.empty:
                         height=300, toolbar_location="right", tools="pan,wheel_zoom,reset,save")
         p_pred.grid.grid_line_alpha = 0.1 # Fainter grid
         p_pred.background_fill_color = "#0E1117"
-        p_pred.border_fill_color = "#0E1117"
+        p_pred.yaxis.formatter = NumeralTickFormatter(format="0,0")
         
         # 1. Historical
         hist_df = df.tail(30)
