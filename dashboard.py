@@ -229,7 +229,7 @@ if not df.empty:
     
     if not df_filtered.empty:
         # Prepare Bokeh Figure
-        p = figure(x_axis_type="datetime", title="", height=300, toolbar_location="right", tools="pan,wheel_zoom,reset,save")
+        p = figure(x_axis_type="datetime", title="", height=300, sizing_mode="stretch_width", toolbar_location="right", tools="pan,wheel_zoom,reset,save")
         p.grid.grid_line_alpha = 0.3
         p.background_fill_color = "#0E1117" # Match Dark Theme
         p.border_fill_color = "#0E1117"
@@ -424,7 +424,7 @@ if not df.empty:
         
         # --- PREDICTION VISUALIZATION (BOKEH) ---
         p_pred = figure(x_axis_type="datetime", title="Gold Price Forecast (Next 7 Days)", 
-                        height=300, toolbar_location="right", tools="pan,wheel_zoom,reset,save")
+                        height=300, sizing_mode="stretch_width", toolbar_location="right", tools="pan,wheel_zoom,reset,save")
         p_pred.grid.grid_line_alpha = 0.1 # Fainter grid
         p_pred.background_fill_color = "#0E1117"
         p_pred.yaxis.formatter = NumeralTickFormatter(format="0,0")
