@@ -440,26 +440,35 @@ if not df.empty:
         predictions = model.predict(future_ordinal)
         
         # Create forecast dataframe
+        future_prices = predictions.flatten()
         forecast_df = pd.DataFrame({
             'timestamp': future_dates,
-            'Predicted Price (21k)': predictions
+            'Price': future_prices,
+            'Type': 'Forecast'
         })
         
-        # Visualize Prediction
-        fig_pred = go.Figure()
+        # Historical Data (Last 30 days) for context
+        hist_df = df.tail(30).copy()
+        hist_df['Price'] = hist_df[target_karat]
+        hist_df['Type'] = 'Historical'
         
-        # Actual History
-        fig_pred.add_trace(go.Scatter(x=df['timestamp'], y=df[target_karat], mode='lines+markers', name='Actual History'))
+        # Combine for Plotting
+        plot_df = pd.concat([hist_df[['timestamp', 'Price', 'Type']], forecast_df])
+
+        # --- PREDICTION VISUALIZATION (ALTAIR) ---
+        pred_chart = alt.Chart(plot_df).mark_line(point=True).encode(
+            x=alt.X('timestamp:T', title='Date', axis=alt.Axis(format='%d %b')),
+            y=alt.Y('Price:Q', title='Price (EGP)', scale=alt.Scale(zero=False)),
+            color=alt.Color('Type:N', scale=alt.Scale(domain=['Historical', 'Forecast'], range=['#1f77b4', '#ff7f0e'])),
+            tooltip=['timestamp', alt.Tooltip('Price', format=',.2f'), 'Type']
+        ).properties(
+            title="Gold Price Forecast (Next 7 Days)"
+        )
         
-        # Forecast
-        fig_pred.add_trace(go.Scatter(x=forecast_df['timestamp'], y=forecast_df['Predicted Price (21k)'], 
-                                     mode='lines+markers', name='AI Forecast', line=dict(dash='dash', color='green')))
-        
-        fig_pred.update_layout(title="Gold Price Forecast (Next 5 Days)", xaxis_title="Date", yaxis_title="Price (EGP)")
-        st.plotly_chart(fig_pred, width="stretch")
+        st.altair_chart(pred_chart.interactive(), use_container_width=True)
         
         st.write("Predicted Prices:")
-        st.dataframe(forecast_df)
+        st.dataframe(forecast_df[['timestamp', 'Price']])
 
 
 
