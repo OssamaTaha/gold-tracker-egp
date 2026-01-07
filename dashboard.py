@@ -46,14 +46,23 @@ def fetch_gold_news(start_date=None, end_date=None):
             pub_date = get_tag('pubDate', item_xml)
             
             if title and link:
+                # Parse date for sorting
+                try:
+                    dt_obj = pd.to_datetime(pub_date)
+                except:
+                    dt_obj = datetime.min
+
                 news_list.append({
                     'title': title, 
                     'link': link, 
-                    'date': pub_date
+                    'date': pub_date,
+                    'dt': dt_obj
                 })
             
             if len(news_list) >= 15: break
                 
+        # Sort by date descending (Latest first)
+        news_list.sort(key=lambda x: x['dt'], reverse=True)
         return news_list
     except Exception as e:
         print(f"News Fetch Error: {e}")
