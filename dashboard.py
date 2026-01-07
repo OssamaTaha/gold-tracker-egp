@@ -1,7 +1,12 @@
 import streamlit as st
 import pandas as pd
 import sqlite3
-import altair as alt
+import streamlit as st
+import pandas as pd
+import sqlite3
+from bokeh.plotting import figure
+from bokeh.models import ColumnDataSource, Range1d, LabelSet, HoverTool, DatetimeTickFormatter
+from bokeh.palettes import Category10
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 import numpy as np
@@ -218,36 +223,79 @@ if not df.empty:
     st.markdown("---")
     st.subheader(f"📈 Price History")
     
+    st.subheader(f"📈 Price History")
+    
     # Defaults
     chart_karats = selected_karats if selected_karats else ['karat_24', 'karat_21', 'karat_18']
     
     if not df_filtered.empty:
-        # Prepare Data
-        source = df_filtered[['timestamp'] + chart_karats].melt('timestamp', var_name='Karat', value_name='Price')
+        # Prepare Bokeh Figure
+        p = figure(x_axis_type="datetime", title="", height=400, toolbar_location="right", tools="pan,wheel_zoom,reset,save")
+        p.grid.grid_line_alpha = 0.3
+        p.background_fill_color = "#0E1117" # Match Dark Theme
+        p.border_fill_color = "#0E1117"
+        p.xaxis.axis_label = "Date"
+        p.yaxis.axis_label = "Price (EGP)"
         
-        # Base Chart
-        base = alt.Chart(source).encode(
-            x=alt.X('timestamp:T', title='Date', axis=alt.Axis(format='%d %b')),
-            y=alt.Y('Price:Q', title='Price (EGP)', scale=alt.Scale(zero=False)),
-            color=alt.Color('Karat:N', legend=alt.Legend(orient='bottom')),
-            tooltip=['timestamp', 'Karat', alt.Tooltip('Price', format=',.0f')]
-        )
+        # Colors
+        colors = Category10[10]
         
-        # Line with Points
-        lines = base.mark_line(point=True).encode()
+        # Labels Data
+        labels_data = []
+
+        for i, karat in enumerate(chart_karats):
+            # Data for this karat
+            k_df = df_filtered[['timestamp', karat]].dropna().sort_values('timestamp')
+            
+            if not k_df.empty:
+                # Add Line
+                source = ColumnDataSource(k_df)
+                p.line(x='timestamp', y=karat, source=source, line_width=3, color=colors[i % 10], legend_label=karat)
+                p.circle(x='timestamp', y=karat, source=source, size=6, color=colors[i % 10])
+                
+                # Store last point for label
+                last_pt = k_df.iloc[-1]
+                labels_data.append({
+                    'timestamp': last_pt['timestamp'],
+                    'price': last_pt[karat],
+                    'text': f"{last_pt[karat]:,.0f}",
+                    'color': colors[i % 10]
+                })
+
+        # Add Labels
+        if labels_data:
+            label_df = pd.DataFrame(labels_data)
+            label_source = ColumnDataSource(label_df)
+            labels = LabelSet(x='timestamp', y='price', text='text', level='glyph',
+                              x_offset=8, y_offset=-8, source=label_source, 
+                              text_color='color', text_font_style='bold')
+            p.add_layout(labels)
+            
+            # Hover Tool
+            hover = HoverTool(tooltips=[("Date", "@timestamp{%F}"), ("Price", "@y{0,0} EGP")],
+                              formatters={'@timestamp': 'datetime'})
+            p.add_tools(hover)
+
+            # CENTER THE VIEW: Extension logic
+            min_ts = df_filtered['timestamp'].min()
+            max_ts = df_filtered['timestamp'].max()
+            duration = max_ts - min_ts
+            
+            # If we have duration, add it to the right
+            if duration.total_seconds() > 0:
+                p.x_range = Range1d(start=min_ts, end=max_ts + duration)
+            else:
+                p.x_range = Range1d(start=max_ts - timedelta(days=4), end=max_ts + timedelta(days=4))
+
+        p.legend.location = "top_left"
+        p.legend.click_policy = "hide"
+        p.legend.background_fill_alpha = 0.0
+        p.legend.label_text_color = "white"
+        p.xaxis.major_label_text_color = "white"
+        p.yaxis.major_label_text_color = "white"
+        p.title.text_color = "white"
         
-        # Latest Value Labels
-        last_pts = source.sort_values('timestamp').groupby('Karat').tail(1)
-        labels = base.mark_text(align='left', dx=8, fontWeight='bold').encode(
-            text=alt.Text('Price:Q', format=',.0f')
-        ).transform_filter(
-            alt.FieldOneOfPredicate(field='timestamp', oneOf=[last_pts['timestamp'].max()])
-        )
-        
-        # Combine
-        chart = (lines + labels).interactive()
-        
-        st.altair_chart(chart, use_container_width=True)
+        st.bokeh_chart(p, use_container_width=True)
     else:
         st.info("No data available for the selected range.")
 
@@ -368,33 +416,45 @@ if not df.empty:
         
         predictions = model.predict(future_ordinal)
         
-        # Create forecast dataframe
-        future_prices = predictions.flatten()
-        forecast_df = pd.DataFrame({
-            'timestamp': future_dates,
-            'Price': future_prices,
-            'Type': 'Forecast'
-        })
+        # --- PREDICTION VISUALIZATION (BOKEH) ---
+        p_pred = figure(x_axis_type="datetime", title="Gold Price Forecast (Next 7 Days)", 
+                        height=400, toolbar_location="right", tools="pan,wheel_zoom,reset,save")
+        p_pred.grid.grid_line_alpha = 0.3
+        p_pred.background_fill_color = "#0E1117"
+        p_pred.border_fill_color = "#0E1117"
         
-        # Historical Data (Last 30 days) for context
-        hist_df = df.tail(30).copy()
-        hist_df['Price'] = hist_df[target_karat]
-        hist_df['Type'] = 'Historical'
+        # 1. Historical
+        hist_df = df.tail(30)
+        source_hist = ColumnDataSource(hist_df)
+        p_pred.line(x='timestamp', y=target_karat, source=source_hist, line_width=3, color='#1f77b4', legend_label="Historical")
+        p_pred.circle(x='timestamp', y=target_karat, source=source_hist, size=6, color='#1f77b4')
         
-        # Combine for Plotting
-        plot_df = pd.concat([hist_df[['timestamp', 'Price', 'Type']], forecast_df])
+        # 2. Forecast
+        source_pred = ColumnDataSource(forecast_df)
+        p_pred.line(x='timestamp', y='Price', source=source_pred, line_width=3, color='#ff7f0e', line_dash="dashed", legend_label="Forecast")
+        p_pred.circle(x='timestamp', y='Price', source=source_pred, size=6, color='#ff7f0e')
+        
+        # Label for final prediction
+        last_pred = forecast_df.iloc[-1]
+        label_pred = Label(x=last_pred['timestamp'], y=last_pred['Price'], 
+                           text=f"{last_pred['Price']:,.0f}", text_color='#ff7f0e', 
+                           x_offset=8, y_offset=-8, text_font_style='bold')
+        p_pred.add_layout(label_pred)
 
-        # --- PREDICTION VISUALIZATION (ALTAIR) ---
-        pred_chart = alt.Chart(plot_df).mark_line(point=True).encode(
-            x=alt.X('timestamp:T', title='Date', axis=alt.Axis(format='%d %b')),
-            y=alt.Y('Price:Q', title='Price (EGP)', scale=alt.Scale(zero=False)),
-            color=alt.Color('Type:N', scale=alt.Scale(domain=['Historical', 'Forecast'], range=['#1f77b4', '#ff7f0e'])),
-            tooltip=['timestamp', alt.Tooltip('Price', format=',.2f'), 'Type']
-        ).properties(
-            title="Gold Price Forecast (Next 7 Days)"
-        )
+        # Styling
+        p_pred.legend.location = "top_left"
+        p_pred.legend.background_fill_alpha = 0.0
+        p_pred.legend.label_text_color = "white"
+        p_pred.xaxis.major_label_text_color = "white"
+        p_pred.yaxis.major_label_text_color = "white"
+        p_pred.title.text_color = "white"
         
-        st.altair_chart(pred_chart.interactive(), use_container_width=True)
+        # Hover
+        hover_pred = HoverTool(tooltips=[("Date", "@timestamp{%F}"), ("Price", "@y{0,0}")],
+                               formatters={'@timestamp': 'datetime'})
+        p_pred.add_tools(hover_pred)
+
+        st.bokeh_chart(p_pred, use_container_width=True)
         
         st.write("Predicted Prices:")
         st.dataframe(forecast_df[['timestamp', 'Price']])
