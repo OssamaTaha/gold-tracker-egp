@@ -224,8 +224,6 @@ if not df.empty:
     st.markdown("---")
     st.subheader(f"📈 Price History")
     
-    st.subheader(f"📈 Price History")
-    
     # Defaults
     chart_karats = selected_karats if selected_karats else ['karat_24', 'karat_21', 'karat_18']
     
