@@ -265,25 +265,35 @@ if not df.empty:
     import altair as alt
 
     # Prepare Data for Altair (Long Format)
-    # 1. Main Price Lines
     chart_karats = selected_karats if selected_karats else ['karat_24', 'karat_21', 'karat_18']
     
     # Filter and Melt
     df_plot = df_filtered[['timestamp'] + chart_karats].melt('timestamp', var_name='Karat', value_name='Price')
     
+    # Define Default Zoom (Last 30 Days)
+    last_date = df['timestamp'].max()
+    start_zoom = last_date - timedelta(days=30)
+    
+    # Configure X-Axis Scale with Default Domain
+    x_scale = alt.Scale(domain=(start_zoom, last_date))
+    
     # Base Chart
     base = alt.Chart(df_plot).encode(
-        x=alt.X('timestamp:T', title=None, axis=alt.Axis(format='%d %b')),
+        x=alt.X('timestamp:T', title=None, axis=alt.Axis(format='%d %b'), scale=x_scale),
         y=alt.Y('Price:Q', title='EGP', scale=alt.Scale(zero=False)),
         color=alt.Color('Karat:N', legend=alt.Legend(orient='bottom')),
-        tooltip=['timestamp', 'Karat', 'Price']
+        tooltip=['timestamp', 'Karat', alt.Tooltip('Price', format=',.0f')]
     )
     
-    # Line Layer
+    # Gradient Area Layer (Fancier Look)
+    # Note: Gradient works best with single series, for multi-series we use opacity
+    areas = base.mark_area(opacity=0.3, interpolate='monotone').encode(
+        color=alt.Color('Karat:N')
+    )
+    
     lines = base.mark_line(interpolate='monotone')
     
     # Text Labels at the End (Latest Price)
-    # We need a separate dataframe for the last points
     last_points = df_plot.sort_values('timestamp').groupby('Karat').tail(1)
     
     text_labels = alt.Chart(last_points).mark_text(
@@ -295,11 +305,9 @@ if not df.empty:
         color='Karat:N'
     )
     
-    final_chart = lines + text_labels
+    final_chart = areas + lines + text_labels
 
     # --- TECHNICAL OVERLAYS (ALTAIR) ---
-    # We use the 'ohlc' dataframe which has Technicals calculcated on 'target_asset'
-    # We need to reset index to get 'timestamp' as column
     ohlc_reset = ohlc.reset_index()
     
     tech_layers = []
@@ -337,8 +345,9 @@ if not df.empty:
     for layer in tech_layers:
         final_chart += layer
 
-    # Display Main Chart
-    st.altair_chart(final_chart.interactive(), use_container_width=True)
+    # Display Main Chart with Horizontal Interaction ONLY
+    # bind_y=False ensures vertical swiping scrolls the page, NOT the chart
+    st.altair_chart(final_chart.interactive(bind_y=False), use_container_width=True)
 
     # --- RSI SUBPLOT (ALTAIR) ---
     if show_rsi:
