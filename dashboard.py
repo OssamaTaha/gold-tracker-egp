@@ -251,8 +251,8 @@ if not df.empty:
             if not k_df.empty:
                 # Add Line
                 source = ColumnDataSource(k_df)
-                p.line(x='timestamp', y=karat, source=source, line_width=3, color=colors[i % 10], legend_label=karat)
-                p.circle(x='timestamp', y=karat, source=source, size=6, color=colors[i % 10])
+                p.line(x='timestamp', y=karat, source=source, line_width=2, color=colors[i % 10], legend_label=karat)
+                p.circle(x='timestamp', y=karat, source=source, size=4, color=colors[i % 10])
                 
                 # Store last point for label
                 last_pt = k_df.iloc[-1]
@@ -433,13 +433,13 @@ if not df.empty:
         # 1. Historical
         hist_df = df.tail(30)
         source_hist = ColumnDataSource(hist_df)
-        p_pred.line(x='timestamp', y=target_karat, source=source_hist, line_width=3, color='#1f77b4', legend_label="Historical")
-        p_pred.circle(x='timestamp', y=target_karat, source=source_hist, size=6, color='#1f77b4')
+        p_pred.line(x='timestamp', y=target_karat, source=source_hist, line_width=2, color='#1f77b4', legend_label="Historical")
+        p_pred.circle(x='timestamp', y=target_karat, source=source_hist, size=4, color='#1f77b4')
         
         # 2. Forecast
         source_pred = ColumnDataSource(forecast_df)
-        p_pred.line(x='timestamp', y='Price', source=source_pred, line_width=3, color='#ff7f0e', line_dash="dashed", legend_label="Forecast")
-        p_pred.circle(x='timestamp', y='Price', source=source_pred, size=6, color='#ff7f0e')
+        p_pred.line(x='timestamp', y='Price', source=source_pred, line_width=2, color='#ff7f0e', line_dash="dashed", legend_label="Forecast")
+        p_pred.circle(x='timestamp', y='Price', source=source_pred, size=4, color='#ff7f0e')
         
         # Label for final prediction
         if not forecast_df.empty:
