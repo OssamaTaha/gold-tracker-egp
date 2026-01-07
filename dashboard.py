@@ -1,8 +1,7 @@
 import streamlit as st
 import pandas as pd
 import sqlite3
-import plotly.express as px
-import plotly.graph_objects as go
+import altair as alt
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 import numpy as np
@@ -253,90 +252,102 @@ if not df.empty:
     show_rsi = c_ind4.checkbox("Show RSI Panel", value=True, help="Overbought (>70) / Oversold (<30) Gauge.")
 
     # --- PLOTTING ---
-    from plotly.subplots import make_subplots
+    # --- PLOTTING (ALTAIR) ---
+    import altair as alt
+
+    # Prepare Data for Altair (Long Format)
+    # 1. Main Price Lines
+    chart_karats = selected_karats if selected_karats else ['karat_24', 'karat_21', 'karat_18']
     
-    rows = 2 if show_rsi else 1
-    row_heights = [0.7, 0.3] if show_rsi else [1.0]
-
-    fig = make_subplots(rows=rows, cols=1, shared_xaxes=True, 
-                        vertical_spacing=0.05, row_heights=row_heights,
-                        subplot_titles=("Price Action", "RSI (14)" if show_rsi else None))
+    # Filter and Melt
+    df_plot = df_filtered[['timestamp'] + chart_karats].melt('timestamp', var_name='Karat', value_name='Price')
     
-    # Draw all selected assets as lines
-    if selected_karats:
-        for k in selected_karats:
-            asset_data = df_filtered[['timestamp', k]].dropna()
-            
-            # Main Line
-            fig.add_trace(go.Scatter(
-                x=asset_data['timestamp'], y=asset_data[k],
-                mode='lines', name=k.replace('_',' ').title()
-            ), row=1, col=1)
-            
-            # Latest Price Label (Text at the end)
-            if not asset_data.empty:
-                last_pt = asset_data.iloc[-1]
-                fig.add_trace(go.Scatter(
-                    x=[last_pt['timestamp']], 
-                    y=[last_pt[k]],
-                    mode='markers+text',
-                    text=[f"{last_pt[k]:,.0f}"],
-                    textposition="middle right",
-                    marker=dict(size=8),
-                    showlegend=False,
-                    name=f"Current {k}"
-                ), row=1, col=1)
-
-    else:
-        st.warning("Select Karats to view.")
-
-    # --- OVERLAYS (SHARED) ---
-    if show_sma:
-        fig.add_trace(go.Scatter(x=ohlc.index, y=ohlc['SMA20'], mode='lines', name=f'SMA 20 ({target_asset})', line=dict(color='orange', width=1)), row=1, col=1)
-    if show_ema:
-        fig.add_trace(go.Scatter(x=ohlc.index, y=ohlc['EMA50'], mode='lines', name=f'EMA 50 ({target_asset})', line=dict(color='cyan', width=1)), row=1, col=1)
-    if show_bb:
-        fig.add_trace(go.Scatter(x=ohlc.index, y=ohlc['BB_Upper'], mode='lines', name='BB Upper', line=dict(color='gray', width=1, dash='dot')), row=1, col=1)
-        fig.add_trace(go.Scatter(x=ohlc.index, y=ohlc['BB_Lower'], mode='lines', name='BB Lower', line=dict(color='gray', width=1, dash='dot'), fill='tonexty'), row=1, col=1)
-
-    # --- RSI SUBPLOT ---
-    if show_rsi:
-        fig.add_trace(go.Scatter(x=ohlc.index, y=ohlc['RSI'], name='RSI', line=dict(color='purple', width=2)), row=2, col=1)
-        fig.add_hline(y=70, line_dash="dash", line_color="red", row=2, col=1)
-        fig.add_hline(y=30, line_dash="dash", line_color="green", row=2, col=1)
-        fig.update_yaxes(range=[0, 100], row=2, col=1)
-
-    # Layout
-    fig.update_layout(
-        xaxis_rangeslider_visible=True,
-        height=700 if show_rsi else 500,
-        template="plotly_dark",
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        xaxis=dict(
-            rangeselector=dict(
-                buttons=list([
-                    dict(count=1, label="1d", step="day", stepmode="backward"),
-                    dict(count=7, label="1w", step="day", stepmode="backward"),
-                    dict(count=1, label="1m", step="month", stepmode="backward"),
-                    dict(count=3, label="3m", step="month", stepmode="backward"),
-                    dict(count=1, label="YTD", step="year", stepmode="todate"),
-                    dict(count=1, label="1y", step="year", stepmode="backward"),
-                    dict(step="all")
-                ])
-            ),
-            type="date"
-        )
+    # Base Chart
+    base = alt.Chart(df_plot).encode(
+        x=alt.X('timestamp:T', title=None, axis=alt.Axis(format='%d %b')),
+        y=alt.Y('Price:Q', title='EGP', scale=alt.Scale(zero=False)),
+        color=alt.Color('Karat:N', legend=alt.Legend(orient='bottom')),
+        tooltip=['timestamp', 'Karat', 'Price']
     )
     
-    # Default Zoom to last 30 days
-    # User requested FULL history by default
-    # if not df.empty:
-    #     last_date = df['timestamp'].max()
-    #     start_zoom = last_date - timedelta(days=30)
-    #     fig.update_xaxes(range=[start_zoom, last_date])
+    # Line Layer
+    lines = base.mark_line(interpolate='monotone')
     
-    # MOBILE CONFIG: Disable Scroll Zoom to prevent page blocking
-    st.plotly_chart(fig, width="stretch", config={'scrollZoom': False, 'displayModeBar': False, 'staticPlot': False})
+    # Text Labels at the End (Latest Price)
+    # We need a separate dataframe for the last points
+    last_points = df_plot.sort_values('timestamp').groupby('Karat').tail(1)
+    
+    text_labels = alt.Chart(last_points).mark_text(
+        align='left', dx=5, dy=-5, fontSize=12, fontWeight='bold'
+    ).encode(
+        x='timestamp:T',
+        y='Price:Q',
+        text=alt.Text('Price:Q', format=',.0f'),
+        color='Karat:N'
+    )
+    
+    final_chart = lines + text_labels
+
+    # --- TECHNICAL OVERLAYS (ALTAIR) ---
+    # We use the 'ohlc' dataframe which has Technicals calculcated on 'target_asset'
+    # We need to reset index to get 'timestamp' as column
+    ohlc_reset = ohlc.reset_index()
+    
+    tech_layers = []
+    
+    if show_sma:
+        sma_line = alt.Chart(ohlc_reset).mark_line(color='orange', strokeDash=[5,5]).encode(
+            x='timestamp:T',
+            y='SMA20:Q',
+            tooltip=['timestamp', alt.Tooltip('SMA20', format=',.0f', title=f'SMA 20 ({target_asset})')]
+        )
+        tech_layers.append(sma_line)
+
+    if show_ema:
+        ema_line = alt.Chart(ohlc_reset).mark_line(color='cyan', strokeDash=[2,2]).encode(
+            x='timestamp:T',
+            y='EMA50:Q',
+            tooltip=['timestamp', alt.Tooltip('EMA50', format=',.0f', title=f'EMA 50 ({target_asset})')]
+        )
+        tech_layers.append(ema_line)
+
+    if show_bb:
+        # Band (Area)
+        bb_band = alt.Chart(ohlc_reset).mark_area(opacity=0.1, color='gray').encode(
+            x='timestamp:T',
+            y='BB_Lower:Q',
+            y2='BB_Upper:Q'
+        )
+        # Edges
+        bb_upper = alt.Chart(ohlc_reset).mark_line(color='gray', size=0.5).encode(x='timestamp:T', y='BB_Upper:Q')
+        bb_lower = alt.Chart(ohlc_reset).mark_line(color='gray', size=0.5).encode(x='timestamp:T', y='BB_Lower:Q')
+        
+        tech_layers.extend([bb_band, bb_upper, bb_lower])
+
+    # Combine all layers
+    for layer in tech_layers:
+        final_chart += layer
+
+    # Display Main Chart
+    st.altair_chart(final_chart.interactive(), use_container_width=True)
+
+    # --- RSI SUBPLOT (ALTAIR) ---
+    if show_rsi:
+        # RSI Chart
+        rsi_base = alt.Chart(ohlc_reset).encode(x='timestamp:T')
+        
+        rsi_line = rsi_base.mark_line(color='purple').encode(
+            y=alt.Y('RSI:Q', scale=alt.Scale(domain=[0, 100]), title='RSI')
+        )
+        
+        # Guidelines (70/30)
+        rule_70 = alt.Chart(pd.DataFrame({'y': [70]})).mark_rule(color='red', strokeDash=[2,2]).encode(y='y')
+        rule_30 = alt.Chart(pd.DataFrame({'y': [30]})).mark_rule(color='green', strokeDash=[2,2]).encode(y='y')
+        
+        rsi_chart = (rsi_line + rule_70 + rule_30).properties(height=150)
+        
+        st.altair_chart(rsi_chart.interactive(), use_container_width=True)
+
 
     # --- AI ANALYST (SHARED) ---
     if not ohlc.empty and len(ohlc) > 20:
