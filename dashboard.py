@@ -288,16 +288,25 @@ if not df.empty:
         tooltip=['timestamp', 'Karat', alt.Tooltip('Price', format=',.0f')]
     )
     
-    # Gradient Area Layer (Fancier Look)
-    # Note: Gradient works best with single series, for multi-series we use opacity
-    areas = base.mark_area(opacity=0.3, interpolate='monotone').encode(
+    # Simple Line + Points (Similar to AI Chart style)
+    lines = base.mark_line(point=True).encode(
         color=alt.Color('Karat:N')
     )
     
-    lines = base.mark_line(interpolate='monotone', strokeWidth=3)
-    
     # Text Labels at the End (Latest Price)
     last_points = df_plot.sort_values('timestamp').groupby('Karat').tail(1)
+    
+    text_labels = alt.Chart(last_points).mark_text(
+        align='left', dx=5, dy=-5, fontSize=12, fontWeight='bold'
+    ).encode(
+        x='timestamp:T',
+        y='Price:Q',
+        text=alt.Text('Price:Q', format=',.0f'),
+        color='Karat:N'
+    )
+    
+    # Combined (No Area layer)
+    final_chart = lines + text_labels
     
     text_labels = alt.Chart(last_points).mark_text(
         align='left', dx=5, dy=-5, fontSize=12, fontWeight='bold'
