@@ -96,16 +96,16 @@ if not df.empty:
 
 # 1. Date Filter
 if not df.empty:
-    # --- CUSTOM CSS (Mobile Polish) ---
+    # --- CUSTOM CSS (Adaptive Polish) ---
     st.markdown("""
     <style>
-        /* Card Style for Metrics */
+        /* Card Style for Metrics - Adaptive to Theme */
         div[data-testid="stMetric"] {
-            background-color: #1E1E1E;
+            background-color: var(--secondary-background-color);
             padding: 15px;
             border-radius: 10px;
-            border: 1px solid #333;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+            border: 1px solid rgba(250, 250, 250, 0.1);
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
         }
         /* Mobile: Hide Chart Modebar & Compact Headers */
         .modebar-container { display: none !important; }
