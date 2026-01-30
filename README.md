@@ -1,61 +1,76 @@
-# 🏆 GoldTracker EGP: AI-Powered Gold Analytics
+# 🏆 GoldTracker EGP
 
-![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=for-the-badge&logo=Streamlit&logoColor=white)
-![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
-![Plotly](https://img.shields.io/badge/Plotly-3F4F75?style=for-the-badge&logo=plotly&logoColor=white)
+**GoldTracker EGP** is a premium, real-time dashboard for tracking gold prices in Egypt. It combines live global market data with local exchange rates to provide accurate, up-to-the-minute gold prices in Egyptian Pounds (EGP).
 
-An advanced real-time dashboard for tracking, analyzing, and forecasting Egyptian Gold prices. Built for investors and technical analysts.
+![GoldTracker Dashboard](https://raw.githubusercontent.com/placeholder/image.png)
 
-## 🌟 Features
+## ✨ Features
 
-### 🔍 Real-Time Data Pipeline (ETL)
-- **Automated Scraping**: Python script fetches live buy/sell prices for 24k, 21k, and 18k gold every 30 minutes from local market sources.
-- **Robust Storage**: Data is historized in a SQLite database, allowing for long-term trend analysis.
-
-### 📈 Interactive Dashboard
-- **Advanced Charting**: Pure Line Chart interface with direct price labels, range sliders, and zoom controls (1D, 1W, 1Y, All).
-- **Technical Analysis Suite**: Toggleable professional indicators:
-  - **SMA 20** (Fair Value / Support)
-  - **EMA 50** (Trend Strength)
-  - **Bollinger Bands** (Volatility & Breakouts)
-  - **RSI** (Momentum & Overbought/Oversold detection)
-
-### 🧠 AI Analyst (Smart Signals)
-- **Automated Trading Signals**: The system analyzes technical indicators in real-time to generate **"Strong Buy"**, **"Sell"**, or **"Hold"** recommendations.
-- **Dynamic Targets**: Calculates realistic "Fair Value" entry points (based on Mean Reversion) and "Taking Profit" zones.
-
-### 📰 Market Intelligence
-- **News Aggregator**: Integrated Google News feed (Arabic) to display the latest local market updates directly in the dashboard.
+- **Live Gold Prices**: Real-time tracking for **24K, 21K, 18K, and 14K** gold in EGP.
+- **Global Markets**: Dedicated card for the **Global Ounce (XAU/USD)**.
+- **Interactive Charts**: 
+  - Switch between **Local (EGP)** and **Global (USD)** views.
+  - Historical data from 1 Day to All-Time.
+  - Zoom, pan, and advanced tooltips.
+- **Market News**: Curated feed of the latest gold news in Arabic.
+- **Premium Design**: Dark theme with "Gold Luxury" aesthetics, glassmorphism effects, and micro-animations.
+- **Mobile Optimized**: Fully responsive layout for phones and tablets.
+- **Reliable Data**: Automatic background collection, crash recovery, and data gap backfilling.
 
 ## 🛠️ Tech Stack
-- **Frontend**: Streamlit
-- **Visualization**: Plotly Interactive Charts
-- **Backend/ETL**: Python (`requests`, `beautifulsoup4`, `pandas`)
-- **Database**: SQLite
-- **Machine Learning**: `scikit-learn` (Linear Regression for price forecasting)
 
-## 🚀 How to Run Locally
+- **Backend**: Python (FastAPI), SQLite, yfinance (Yahoo Finance API).
+- **Frontend**: Vanilla JavaScript, CSS3 (Variables, Grid, Flexbox), HTML5.
+- **Charts**: TradingView Lightweight Charts.
 
-1. **Clone the Repo**
-   ```bash
-   git clone https://github.com/yourusername/goldtracker-egp.git
-   cd goldtracker-egp
-   ```
+## 🚀 Installation & Setup
 
-2. **Install Dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/yourusername/gold-tracker-egp.git
+    cd gold-tracker-egp
+    ```
 
-3. **Run the Scraper (Populate Data)**
-   ```bash
-   python etl.py
-   ```
+2.  **Create a virtual environment:**
+    ```bash
+    python3 -m venv .venv
+    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+    ```
 
-4. **Launch Dashboard**
-   ```bash
-   streamlit run dashboard.py
-   ```
+3.  **Install dependencies:**
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-## 📊 Preview
-*(Add a screenshot of your dashboard here)*
+4.  **Run the application:**
+    ```bash
+    python api.py
+    ```
+
+5.  **Access the Dashboard:**
+    Open your browser to `http://localhost:8000`.
+
+## 🌐 Live Demo / Hosting
+
+To share the application with others over the internet, we recommend using **ngrok**:
+
+```bash
+# Install ngrok and authenticate
+ngrok config add-authtoken <YOUR_TOKEN>
+
+# Expose port 8000
+ngrok http 8000
+```
+Then share the generated HTTPS link.
+
+## 📁 Project Structure
+
+- `api.py`: Main FastAPI application and background workers.
+- `gold_prices.db`: SQLite database storing historical price data.
+- `frontend/`: Static assets.
+    - `index.html`: Main dashboard UI.
+    - `css/styles.css`: Premium dark theme styles.
+    - `js/app.js`: Frontend logic and chart rendering.
+
+## 📄 License
+MIT License.
