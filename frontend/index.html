@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="GoldTracker EGP - Egypt's premier real-time gold price tracking dashboard. Live XAU/EGP rates, candlestick charts, and market news.">
+    <meta name="keywords" content="gold price egypt, سعر الذهب, XAU EGP, gold tracker, أسعار الذهب مصر">
+    <title>GoldTracker EGP | Real-time Gold Prices in Egypt</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- TradingView Lightweight Charts -->
+    <script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="/css/styles.css">
+
+    <!-- Favicon -->
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏆</text></svg>">
+</head>
+
+<body>
+    <!-- Background Effects -->
+    <div class="bg-effects">
+        <div class="glow-orb orb-1"></div>
+        <div class="glow-orb orb-2"></div>
+        <div class="grid-pattern"></div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo-section">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="20" cy="20" r="18" stroke="url(#goldGradient)" stroke-width="2" fill="none" />
+                        <path d="M20 8L25 16H15L20 8Z" fill="url(#goldGradient)" />
+                        <rect x="14" y="16" width="12" height="14" rx="1" fill="url(#goldGradient)" />
+                        <defs>
+                            <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#d4af37" />
+                                <stop offset="50%" style="stop-color:#ffd700" />
+                                <stop offset="100%" style="stop-color:#d4af37" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <div class="logo-text">
+                    <h1>GoldTracker <span class="accent">EGP</span></h1>
+                    <p class="tagline">Real-time Gold Price Dashboard</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="last-update" id="lastUpdate">
+                    <span class="pulse"></span>
+                    <span>Live</span>
+                </div>
+                <button class="refresh-btn" id="refreshBtn" title="Refresh Data">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
+                        <path d="M21 3v5h-5" />
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Price Cards Section -->
+        <section class="price-cards-section">
+            <div class="section-header">
+                <h2>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M12 6v6l4 2" />
+                    </svg>
+                    Live Gold Prices
+                </h2>
+                <span class="currency-badge">EGP / Gram</span>
+            </div>
+
+            <div class="price-cards-grid" id="priceCards">
+                <!-- 24K Card -->
+                <div class="price-card" data-karat="24">
+                    <div class="card-header">
+                        <span class="karat-badge">24K</span>
+                        <span class="karat-label">Pure Gold</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="price-value" id="price24k">
+                            <span class="price-loading"></span>
+                        </div>
+                        <div class="price-change" id="change24k">
+                            <span class="change-value">--</span>
+                            <span class="change-percent">(--)</span>
+                        </div>
+                    </div>
+                    <div class="card-glow"></div>
+                </div>
+
+                <!-- 21K Card -->
+                <div class="price-card" data-karat="21">
+                    <div class="card-header">
+                        <span class="karat-badge">21K</span>
+                        <span class="karat-label">Jewelry Grade</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="price-value" id="price21k">
+                            <span class="price-loading"></span>
+                        </div>
+                        <div class="price-change" id="change21k">
+                            <span class="change-value">--</span>
+                            <span class="change-percent">(--)</span>
+                        </div>
+                    </div>
+                    <div class="card-glow"></div>
+                </div>
+
+                <!-- 18K Card -->
+                <div class="price-card" data-karat="18">
+                    <div class="card-header">
+                        <span class="karat-badge">18K</span>
+                        <span class="karat-label">Fine Jewelry</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="price-value" id="price18k">
+                            <span class="price-loading"></span>
+                        </div>
+                        <div class="price-change" id="change18k">
+                            <span class="change-value">--</span>
+                            <span class="change-percent">(--)</span>
+                        </div>
+                    </div>
+                    <div class="card-glow"></div>
+                </div>
+
+                <!-- 14K Card -->
+                <div class="price-card" data-karat="14">
+                    <div class="card-header">
+                        <span class="karat-badge">14K</span>
+                        <span class="karat-label">Durable</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="price-value" id="price14k">
+                            <span class="price-loading"></span>
+                        </div>
+                        <div class="price-change" id="change14k">
+                            <span class="change-value">--</span>
+                            <span class="change-percent">(--)</span>
+                        </div>
+                    </div>
+                    <div class="card-glow"></div>
+                </div>
+
+                <!-- OUNCE Card -->
+                <div class="price-card" data-karat="oz">
+                    <div class="card-header">
+                        <span class="karat-badge">OZ</span>
+                        <span class="karat-label">Global (USD)</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="price-value" id="priceoz">
+                            <span class="price-loading"></span>
+                        </div>
+                        <div class="price-change" id="changeoz">
+                            <span class="change-value">--</span>
+                            <!-- No change data for live Ounce currently from API but good placeholders -->
+                            <span class="change-percent"></span>
+                        </div>
+                    </div>
+                    <div class="card-glow"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Chart Section -->
+        <section class="chart-section">
+            <div class="section-header">
+                <h2>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 3v18h18" />
+                        <path d="M18 9l-5 5-4-4-3 3" />
+                    </svg>
+                    Gold Price History
+                </h2>
+                <div class="chart-controls">
+                    <div class="timeframe-selector" id="typeSelector">
+                        <button class="timeframe-btn active" data-type="24k">24K</button>
+                        <button class="timeframe-btn" data-type="21k">21K</button>
+                        <button class="timeframe-btn" data-type="18k">18K</button>
+                        <button class="timeframe-btn" data-type="14k">14K</button>
+                        <button class="timeframe-btn" data-type="oz">OZ ($)</button>
+                    </div>
+                    <div class="timeframe-selector" id="timeframeSelector">
+                        <button class="timeframe-btn" data-period="1d">1D</button>
+                        <button class="timeframe-btn" data-period="1w">1W</button>
+                        <button class="timeframe-btn active" data-period="1m">1M</button>
+                        <button class="timeframe-btn" data-period="3m">3M</button>
+                        <button class="timeframe-btn" data-period="1y">1Y</button>
+                        <button class="timeframe-btn" data-period="max">MAX</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-wrapper" id="chartWrapper">
+                    <div class="chart-loading" id="chartLoading">
+                        <div class="loading-spinner"></div>
+                        <span>Loading chart data...</span>
+                    </div>
+                    <div id="candlestickChart"></div>
+                </div>
+                <div class="chart-legend">
+                    <div class="legend-item">
+                        <span class="legend-color up"></span>
+                        <span>Bullish</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color down"></span>
+                        <span>Bearish</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- News Section -->
+        <section class="news-section">
+            <div class="section-header">
+                <h2>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path
+                            d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2" />
+                    </svg>
+                    Market News
+                </h2>
+                <span class="news-source">Powered by Google News</span>
+            </div>
+
+            <div class="news-grid" id="newsGrid">
+                <!-- News cards will be inserted here -->
+                <div class="news-loading">
+                    <div class="loading-spinner"></div>
+                    <span>Loading news...</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <p>© 2026 GoldTracker EGP - Egypt's Premier Gold Price Tracking Platform</p>
+                <p class="disclaimer">Prices are for reference only. Always verify with official sources before
+                    transactions.</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/app.js"></script>
+</body>
+
+</html>
