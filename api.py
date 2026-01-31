@@ -90,18 +90,50 @@ def get_db_connection():
 # LIVE DATA FETCHING
 # ============================================================================
 
-def fetch_live_gold_price():
-    """Fetch live gold price from yfinance."""
+def fetch_gold_from_api():
+    """Fetch live gold price from Gold-API (more accurate real-time data)."""
     try:
-        # Get gold futures price (USD per troy ounce)
+        response = requests.get("https://api.gold-api.com/price/XAU", timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        gold_usd_oz = float(data.get("price", 0))
+        if gold_usd_oz > 0:
+            logger.info(f"🥇 Gold-API: ${gold_usd_oz:.2f}/oz")
+            return gold_usd_oz
+    except Exception as e:
+        logger.warning(f"⚠️ Gold-API failed: {e}")
+    return None
+
+
+def fetch_gold_from_yfinance():
+    """Fallback: Fetch gold price from yfinance futures."""
+    try:
         gold = yf.Ticker("GC=F")
         gold_data = gold.history(period="1d")
+        if not gold_data.empty:
+            price = float(gold_data['Close'].iloc[-1])
+            logger.info(f"📊 yfinance fallback: ${price:.2f}/oz")
+            return price
+    except Exception as e:
+        logger.warning(f"⚠️ yfinance gold failed: {e}")
+    return None
+
+
+def fetch_live_gold_price():
+    """Fetch live gold price using Gold-API (primary) or yfinance (fallback)."""
+    try:
+        # Try Gold-API first (more accurate real-time spot price)
+        gold_usd_oz = fetch_gold_from_api()
         
-        if gold_data.empty:
-            logger.warning("⚠️ No gold data from yfinance")
+        # Fallback to yfinance if Gold-API fails
+        if gold_usd_oz is None:
+            gold_usd_oz = fetch_gold_from_yfinance()
+        
+        if gold_usd_oz is None:
+            logger.warning("⚠️ No gold data from any source")
             return None
         
-        # Get USD/EGP exchange rate
+        # Get USD/EGP exchange rate from yfinance
         egp = yf.Ticker("USDEGP=X")
         egp_data = egp.history(period="1d")
         
@@ -109,7 +141,6 @@ def fetch_live_gold_price():
             logger.warning("⚠️ No USD/EGP data from yfinance")
             return None
         
-        gold_usd_oz = float(gold_data['Close'].iloc[-1])
         usd_egp_rate = float(egp_data['Close'].iloc[-1])
         
         # Calculate 24K price in EGP per gram (31.1035 grams per troy ounce)
@@ -126,6 +157,83 @@ def fetch_live_gold_price():
         }
     except Exception as e:
         logger.error(f"❌ Error fetching live price: {e}")
+        return None
+
+
+# ============================================================================
+# SILVER PRICE FETCHING
+# ============================================================================
+
+def fetch_silver_from_api():
+    """Fetch live silver price from Gold-API (XAG)."""
+    try:
+        response = requests.get("https://api.gold-api.com/price/XAG", timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        silver_usd_oz = float(data.get("price", 0))
+        if silver_usd_oz > 0:
+            logger.info(f"🥈 Silver-API: ${silver_usd_oz:.2f}/oz")
+            return silver_usd_oz
+    except Exception as e:
+        logger.warning(f"⚠️ Silver-API failed: {e}")
+    return None
+
+
+def fetch_silver_from_yfinance():
+    """Fallback: Fetch silver price from yfinance futures."""
+    try:
+        silver = yf.Ticker("SI=F")
+        silver_data = silver.history(period="1d")
+        if not silver_data.empty:
+            price = float(silver_data['Close'].iloc[-1])
+            logger.info(f"📊 yfinance silver fallback: ${price:.2f}/oz")
+            return price
+    except Exception as e:
+        logger.warning(f"⚠️ yfinance silver failed: {e}")
+    return None
+
+
+def fetch_live_silver_price():
+    """Fetch live silver price using Gold-API (primary) or yfinance (fallback)."""
+    try:
+        # Try Gold-API first for accurate real-time spot price
+        silver_usd_oz = fetch_silver_from_api()
+        
+        # Fallback to yfinance if Gold-API fails
+        if silver_usd_oz is None:
+            silver_usd_oz = fetch_silver_from_yfinance()
+        
+        if silver_usd_oz is None:
+            logger.warning("⚠️ No silver data from any source")
+            return None
+        
+        # Get USD/EGP exchange rate from yfinance
+        egp = yf.Ticker("USDEGP=X")
+        egp_data = egp.history(period="1d")
+        
+        if egp_data.empty:
+            logger.warning("⚠️ No USD/EGP data from yfinance")
+            return None
+        
+        usd_egp_rate = float(egp_data['Close'].iloc[-1])
+        
+        # Calculate silver purity prices in EGP per gram (31.1035 grams per troy ounce)
+        # Apply Egyptian market premium (~11%) to match local silver prices
+        EGYPT_SILVER_PREMIUM = 1.11  # Egyptian market premium over global spot
+        silver_999_spot = (silver_usd_oz / 31.1035) * usd_egp_rate
+        silver_999 = silver_999_spot * EGYPT_SILVER_PREMIUM
+        
+        return {
+            "timestamp": datetime.now(EGYPT_TZ),
+            "silver_usd_oz": round(silver_usd_oz, 2),
+            "usd_egp_rate": round(usd_egp_rate, 4),
+            "purity_999": round(silver_999, 2),           # 99.9% pure
+            "purity_925": round(silver_999 * (925/999), 2),   # Sterling silver
+            "purity_900": round(silver_999 * (900/999), 2),   # Coin silver
+            "purity_800": round(silver_999 * (800/999), 2)    # European silver
+        }
+    except Exception as e:
+        logger.error(f"❌ Error fetching live silver price: {e}")
         return None
 
 
@@ -464,31 +572,36 @@ def calculate_karat_prices(price_24k: float) -> dict:
 @app.get("/api/prices/current")
 async def get_current_prices():
     """
-    Get LIVE gold prices for all karats using yfinance.
-    Calculates XAU/EGP from gold futures and USD/EGP exchange rate.
+    Get LIVE gold prices for all karats.
+    Uses Gold-API for accurate spot prices, yfinance as fallback.
     """
     try:
-        # Fetch live gold price (USD per troy ounce) from yfinance
-        gold = yf.Ticker("GC=F")
-        gold_data = gold.history(period="5d")
+        # Try Gold-API first for accurate real-time spot price
+        current_gold_usd = fetch_gold_from_api()
+        source = "Gold-API (XAU/USD)"
         
-        if gold_data.empty:
+        # Fallback to yfinance if Gold-API fails
+        if current_gold_usd is None:
+            current_gold_usd = fetch_gold_from_yfinance()
+            source = "yfinance (GC=F)"
+        
+        if current_gold_usd is None:
             raise HTTPException(status_code=503, detail="Unable to fetch gold prices")
         
-        # Fetch live USD/EGP exchange rate
+        # Fetch USD/EGP exchange rate from yfinance
         egp = yf.Ticker("USDEGP=X")
         egp_data = egp.history(period="5d")
         
         if egp_data.empty:
             raise HTTPException(status_code=503, detail="Unable to fetch exchange rate")
         
-        # Get current and previous values
-        current_gold_usd = gold_data['Close'].iloc[-1]
-        current_usd_egp = egp_data['Close'].iloc[-1]
+        current_usd_egp = float(egp_data['Close'].iloc[-1])
         
-        # Get yesterday's values for change calculation
-        prev_gold_usd = gold_data['Close'].iloc[-2] if len(gold_data) > 1 else current_gold_usd
-        prev_usd_egp = egp_data['Close'].iloc[-2] if len(egp_data) > 1 else current_usd_egp
+        # Get previous gold price from yfinance for change calculation
+        gold = yf.Ticker("GC=F")
+        gold_data = gold.history(period="5d")
+        prev_gold_usd = float(gold_data['Close'].iloc[-2]) if len(gold_data) > 1 else current_gold_usd
+        prev_usd_egp = float(egp_data['Close'].iloc[-2]) if len(egp_data) > 1 else current_usd_egp
         
         # Calculate 24K gold price in EGP per gram
         current_24k = (current_gold_usd / 31.1035) * current_usd_egp
@@ -508,7 +621,7 @@ async def get_current_prices():
         # Build response
         result = {
             "timestamp": now_egypt.strftime("%Y-%m-%d %H:%M:%S"),
-            "source": "yfinance (GC=F × USDEGP=X)",
+            "source": source,
             "gold_usd_oz": {
                 "value": round(current_gold_usd, 2),
                 "change": round(oz_change, 2),
@@ -537,6 +650,220 @@ async def get_current_prices():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch live prices: {str(e)}")
 
+
+# ============================================================================
+# SILVER API ENDPOINTS
+# ============================================================================
+
+def calculate_silver_purity_prices(price_999: float) -> dict:
+    """Calculate all silver purity prices from 999 base price."""
+    return {
+        "purity_999": round(price_999, 2),
+        "purity_925": round(price_999 * (925/999), 2),  # Sterling silver
+        "purity_900": round(price_999 * (900/999), 2),  # Coin silver
+        "purity_800": round(price_999 * (800/999), 2),  # European silver
+        "ounce": round(price_999 * 31.1035, 2)
+    }
+
+
+@app.get("/api/silver/prices/current")
+async def get_silver_current_prices():
+    """
+    Get LIVE silver prices for all purities.
+    Uses Gold-API for accurate spot prices, yfinance as fallback.
+    """
+    try:
+        # Try Gold-API first for accurate real-time spot price
+        current_silver_usd = fetch_silver_from_api()
+        source = "Gold-API (XAG/USD)"
+        
+        # Fallback to yfinance if Gold-API fails
+        if current_silver_usd is None:
+            current_silver_usd = fetch_silver_from_yfinance()
+            source = "yfinance (SI=F)"
+        
+        if current_silver_usd is None:
+            raise HTTPException(status_code=503, detail="Unable to fetch silver prices")
+        
+        # Fetch USD/EGP exchange rate from yfinance
+        egp = yf.Ticker("USDEGP=X")
+        egp_data = egp.history(period="5d")
+        
+        if egp_data.empty:
+            raise HTTPException(status_code=503, detail="Unable to fetch exchange rate")
+        
+        current_usd_egp = float(egp_data['Close'].iloc[-1])
+        
+        # Get previous silver price from yfinance for change calculation
+        silver = yf.Ticker("SI=F")
+        silver_data = silver.history(period="5d")
+        prev_silver_usd = float(silver_data['Close'].iloc[-2]) if len(silver_data) > 1 else current_silver_usd
+        prev_usd_egp = float(egp_data['Close'].iloc[-2]) if len(egp_data) > 1 else current_usd_egp
+        
+        # Calculate 999 silver price in EGP per gram with Egyptian market premium
+        EGYPT_SILVER_PREMIUM = 1.11  # Egyptian market premium (~11%) over global spot
+        current_999_spot = (current_silver_usd / 31.1035) * current_usd_egp
+        prev_999_spot = (prev_silver_usd / 31.1035) * prev_usd_egp
+        current_999 = current_999_spot * EGYPT_SILVER_PREMIUM
+        prev_999 = prev_999_spot * EGYPT_SILVER_PREMIUM
+        
+        # Calculate all purity prices
+        prices = calculate_silver_purity_prices(current_999)
+        prev_prices = calculate_silver_purity_prices(prev_999)
+        
+        # Calculate Ounce change
+        oz_change = current_silver_usd - prev_silver_usd
+        oz_change_pct = (oz_change / prev_silver_usd) * 100 if prev_silver_usd else 0
+        
+        # Get current Egypt time
+        now_egypt = datetime.now(EGYPT_TZ)
+        
+        # Build response
+        result = {
+            "timestamp": now_egypt.strftime("%Y-%m-%d %H:%M:%S"),
+            "source": source,
+            "silver_usd_oz": {
+                "value": round(current_silver_usd, 2),
+                "change": round(oz_change, 2),
+                "change_pct": round(oz_change_pct, 2),
+                "direction": "up" if oz_change > 0 else "down" if oz_change < 0 else "neutral"
+            },
+            "usd_egp_rate": round(current_usd_egp, 2),
+            "prices": {}
+        }
+        
+        for purity in ['purity_999', 'purity_925', 'purity_900', 'purity_800']:
+            change = prices[purity] - prev_prices[purity]
+            change_pct = (change / prev_prices[purity]) * 100 if prev_prices[purity] else 0
+            
+            result["prices"][purity] = {
+                "value": prices[purity],
+                "change": round(change, 2),
+                "change_pct": round(change_pct, 2),
+                "direction": "up" if change > 0 else "down" if change < 0 else "neutral"
+            }
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch live silver prices: {str(e)}")
+
+
+@app.get("/api/silver/prices/ohlc")
+async def get_silver_ohlc_data(
+    period: str = Query("1m", description="Period: 1d, 1w, 1m, 3m, 6m, 1y, max"),
+    type: str = Query("999", description="Type: 999, 925, 900, 800, oz")
+):
+    """
+    Get historical silver price data for chart.
+    Fetches from yfinance (SI=F) and calculates purity prices.
+    """
+    try:
+        period_map = {
+            "1d": ("1d", "5m"), "1w": ("5d", "1h"), "1m": ("1mo", "1d"),
+            "3m": ("3mo", "1d"), "6m": ("6mo", "1d"), "1y": ("1y", "1wk"),
+            "max": ("max", "1mo")
+        }
+        yf_period, yf_interval = period_map.get(period, ("1mo", "1d"))
+        
+        # Get silver and EGP data
+        silver = yf.Ticker("SI=F")
+        egp = yf.Ticker("USDEGP=X")
+        
+        silver_data = silver.history(period=yf_period, interval=yf_interval)
+        egp_data = egp.history(period=yf_period, interval=yf_interval)
+        
+        if silver_data.empty or egp_data.empty:
+            return {"period": period, "data": []}
+        
+        # Use a fixed exchange rate for historical calculation
+        latest_egp = float(egp_data['Close'].iloc[-1])
+        
+        # Purity multipliers
+        purity_map = {
+            "999": 1.0, "925": 0.925, "900": 0.900, "800": 0.800, "oz": None
+        }
+        purity_mult = purity_map.get(type.lower(), 1.0)
+        
+        data = []
+        for idx, row in silver_data.iterrows():
+            silver_price = float(row['Close'])
+            
+            if type.lower() == 'oz':
+                # Return USD price directly
+                close_val = silver_price
+                open_val = float(row['Open'])
+                high_val = float(row['High'])
+                low_val = float(row['Low'])
+            else:
+                # Calculate EGP per gram for purity
+                purity_999 = (silver_price / 31.1035) * latest_egp
+                close_val = purity_999 * purity_mult
+                open_val = (float(row['Open']) / 31.1035) * latest_egp * purity_mult
+                high_val = (float(row['High']) / 31.1035) * latest_egp * purity_mult
+                low_val = (float(row['Low']) / 31.1035) * latest_egp * purity_mult
+            
+            data.append({
+                "time": int(idx.timestamp()),
+                "open": round(open_val, 2),
+                "high": round(high_val, 2),
+                "low": round(low_val, 2),
+                "close": round(close_val, 2)
+            })
+        
+        return {
+            "period": period, 
+            "interval": yf_interval, 
+            "data": data, 
+            "currency": "USD" if type.lower() == "oz" else "EGP"
+        }
+        
+    except Exception as e:
+        return {"period": period, "data": [], "error": str(e)}
+
+
+@app.get("/api/silver/news")
+async def get_silver_news(limit: int = Query(6, description="Number of news items")):
+    """Fetch latest silver news from Google News RSS (Arabic)."""
+    try:
+        # Google News RSS for silver prices in Egypt (Arabic)
+        rss_url = "https://news.google.com/rss/search?q=اسعار+الفضة+مصر&hl=ar&gl=EG&ceid=EG:ar"
+        
+        response = requests.get(rss_url, timeout=10)
+        response.raise_for_status()
+        
+        # Parse RSS feed
+        import xml.etree.ElementTree as ET
+        root = ET.fromstring(response.content)
+        
+        news_items = []
+        for item in root.findall('.//item')[:limit]:
+            title = item.find('title').text if item.find('title') is not None else ""
+            link = item.find('link').text if item.find('link') is not None else ""
+            pub_date = item.find('pubDate').text if item.find('pubDate') is not None else ""
+            source = item.find('source').text if item.find('source') is not None else "Google News"
+            
+            # Parse date
+            try:
+                from email.utils import parsedate_to_datetime
+                parsed_date = parsedate_to_datetime(pub_date)
+                time_ago = get_time_ago(parsed_date)
+            except:
+                time_ago = pub_date
+            
+            news_items.append({
+                "title": title,
+                "link": link,
+                "source": source,
+                "time_ago": time_ago
+            })
+        
+        return {"news": news_items}
+        
+    except Exception as e:
+        return {"news": [], "error": str(e)}
 
 @app.get("/api/prices/ohlc")
 async def get_ohlc_data(
@@ -802,6 +1129,12 @@ app.mount("/js", StaticFiles(directory="frontend/js"), name="js")
 async def serve_frontend():
     """Serve the main dashboard."""
     return FileResponse("frontend/index.html")
+
+
+@app.get("/silver")
+async def serve_silver_frontend():
+    """Serve the silver dashboard."""
+    return FileResponse("frontend/silver.html")
 
 
 # ============================================================================

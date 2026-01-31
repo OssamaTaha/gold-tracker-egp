@@ -5,9 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description"
-        content="GoldTracker EGP - Egypt's premier real-time gold price tracking dashboard. Live XAU/EGP rates, candlestick charts, and market news.">
-    <meta name="keywords" content="gold price egypt, سعر الذهب, XAU EGP, gold tracker, أسعار الذهب مصر">
-    <title>GoldTracker EGP | Real-time Gold Prices in Egypt</title>
+        content="SilverTracker EGP - Egypt's premier real-time silver price tracking dashboard. Live XAG/EGP rates, charts, and market news.">
+    <meta name="keywords" content="silver price egypt, سعر الفضة, XAG EGP, silver tracker, أسعار الفضة مصر">
+    <title>SilverTracker EGP | Real-time Silver Prices in Egypt</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,11 +19,11 @@
     <script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
 
     <!-- Styles -->
-    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/silver.css">
 
     <!-- Favicon -->
     <link rel="icon"
-        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏆</text></svg>">
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🥈</text></svg>">
 </head>
 
 <body>
@@ -41,25 +41,25 @@
             <div class="logo-section">
                 <div class="logo-icon">
                     <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="20" cy="20" r="18" stroke="url(#goldGradient)" stroke-width="2" fill="none" />
-                        <path d="M20 8L25 16H15L20 8Z" fill="url(#goldGradient)" />
-                        <rect x="14" y="16" width="12" height="14" rx="1" fill="url(#goldGradient)" />
+                        <circle cx="20" cy="20" r="18" stroke="url(#silverGradient)" stroke-width="2" fill="none" />
+                        <path d="M20 8L25 16H15L20 8Z" fill="url(#silverGradient)" />
+                        <rect x="14" y="16" width="12" height="14" rx="1" fill="url(#silverGradient)" />
                         <defs>
-                            <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" style="stop-color:#d4af37" />
-                                <stop offset="50%" style="stop-color:#ffd700" />
-                                <stop offset="100%" style="stop-color:#d4af37" />
+                            <linearGradient id="silverGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#C0C0C0" />
+                                <stop offset="50%" style="stop-color:#E8E8E8" />
+                                <stop offset="100%" style="stop-color:#A8A8A8" />
                             </linearGradient>
                         </defs>
                     </svg>
                 </div>
                 <div class="logo-text">
-                    <h1>GoldTracker <span class="accent">EGP</span></h1>
-                    <p class="tagline">Real-time Gold Price Dashboard</p>
+                    <h1>SilverTracker <span class="accent">EGP</span></h1>
+                    <p class="tagline">Real-time Silver Price Dashboard</p>
                 </div>
             </div>
             <div class="header-actions">
-                <a href="/silver" class="nav-link">🥈 Silver</a>
+                <a href="/" class="nav-link">🏆 Gold</a>
                 <div class="last-update" id="lastUpdate">
                     <span class="pulse"></span>
                     <span>Live</span>
@@ -81,23 +81,23 @@
                         <circle cx="12" cy="12" r="10" />
                         <path d="M12 6v6l4 2" />
                     </svg>
-                    Live Gold Prices
+                    Live Silver Prices
                 </h2>
                 <span class="currency-badge">EGP / Gram</span>
             </div>
 
             <div class="price-cards-grid" id="priceCards">
-                <!-- 24K Card -->
-                <div class="price-card" data-karat="24">
+                <!-- 999 Card (Pure Silver) -->
+                <div class="price-card" data-purity="999">
                     <div class="card-header">
-                        <span class="karat-badge">24K</span>
-                        <span class="karat-label">Pure Gold</span>
+                        <span class="karat-badge">999</span>
+                        <span class="karat-label">Pure Silver</span>
                     </div>
                     <div class="card-body">
-                        <div class="price-value" id="price24k">
+                        <div class="price-value" id="price999">
                             <span class="price-loading"></span>
                         </div>
-                        <div class="price-change" id="change24k">
+                        <div class="price-change" id="change999">
                             <span class="change-value">--</span>
                             <span class="change-percent">(--)</span>
                         </div>
@@ -105,17 +105,17 @@
                     <div class="card-glow"></div>
                 </div>
 
-                <!-- 21K Card -->
-                <div class="price-card" data-karat="21">
+                <!-- 925 Card (Sterling Silver) -->
+                <div class="price-card" data-purity="925">
                     <div class="card-header">
-                        <span class="karat-badge">21K</span>
-                        <span class="karat-label">Jewelry Grade</span>
+                        <span class="karat-badge">925</span>
+                        <span class="karat-label">Sterling Silver</span>
                     </div>
                     <div class="card-body">
-                        <div class="price-value" id="price21k">
+                        <div class="price-value" id="price925">
                             <span class="price-loading"></span>
                         </div>
-                        <div class="price-change" id="change21k">
+                        <div class="price-change" id="change925">
                             <span class="change-value">--</span>
                             <span class="change-percent">(--)</span>
                         </div>
@@ -123,17 +123,17 @@
                     <div class="card-glow"></div>
                 </div>
 
-                <!-- 18K Card -->
-                <div class="price-card" data-karat="18">
+                <!-- 900 Card (Coin Silver) -->
+                <div class="price-card" data-purity="900">
                     <div class="card-header">
-                        <span class="karat-badge">18K</span>
-                        <span class="karat-label">Fine Jewelry</span>
+                        <span class="karat-badge">900</span>
+                        <span class="karat-label">Coin Silver</span>
                     </div>
                     <div class="card-body">
-                        <div class="price-value" id="price18k">
+                        <div class="price-value" id="price900">
                             <span class="price-loading"></span>
                         </div>
-                        <div class="price-change" id="change18k">
+                        <div class="price-change" id="change900">
                             <span class="change-value">--</span>
                             <span class="change-percent">(--)</span>
                         </div>
@@ -141,17 +141,17 @@
                     <div class="card-glow"></div>
                 </div>
 
-                <!-- 14K Card -->
-                <div class="price-card" data-karat="14">
+                <!-- 800 Card (European Silver) -->
+                <div class="price-card" data-purity="800">
                     <div class="card-header">
-                        <span class="karat-badge">14K</span>
-                        <span class="karat-label">Durable</span>
+                        <span class="karat-badge">800</span>
+                        <span class="karat-label">European Silver</span>
                     </div>
                     <div class="card-body">
-                        <div class="price-value" id="price14k">
+                        <div class="price-value" id="price800">
                             <span class="price-loading"></span>
                         </div>
-                        <div class="price-change" id="change14k">
+                        <div class="price-change" id="change800">
                             <span class="change-value">--</span>
                             <span class="change-percent">(--)</span>
                         </div>
@@ -159,8 +159,8 @@
                     <div class="card-glow"></div>
                 </div>
 
-                <!-- OUNCE Card -->
-                <div class="price-card" data-karat="oz">
+                <!-- OUNCE Card (XAG USD) -->
+                <div class="price-card" data-purity="oz">
                     <div class="card-header">
                         <span class="karat-badge">OZ</span>
                         <span class="karat-label">Global (USD)</span>
@@ -171,7 +171,6 @@
                         </div>
                         <div class="price-change" id="changeoz">
                             <span class="change-value">--</span>
-                            <!-- No change data for live Ounce currently from API but good placeholders -->
                             <span class="change-percent"></span>
                         </div>
                     </div>
@@ -188,14 +187,14 @@
                         <path d="M3 3v18h18" />
                         <path d="M18 9l-5 5-4-4-3 3" />
                     </svg>
-                    Gold Price History
+                    Silver Price History
                 </h2>
                 <div class="chart-controls">
                     <div class="timeframe-selector" id="typeSelector">
-                        <button class="timeframe-btn active" data-type="24k">24K</button>
-                        <button class="timeframe-btn" data-type="21k">21K</button>
-                        <button class="timeframe-btn" data-type="18k">18K</button>
-                        <button class="timeframe-btn" data-type="14k">14K</button>
+                        <button class="timeframe-btn active" data-type="999">999</button>
+                        <button class="timeframe-btn" data-type="925">925</button>
+                        <button class="timeframe-btn" data-type="900">900</button>
+                        <button class="timeframe-btn" data-type="800">800</button>
                         <button class="timeframe-btn" data-type="oz">OZ ($)</button>
                     </div>
                     <div class="timeframe-selector" id="timeframeSelector">
@@ -238,7 +237,7 @@
                         <path
                             d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2" />
                     </svg>
-                    Market News
+                    Silver Market News
                 </h2>
                 <span class="news-source">Powered by Google News</span>
             </div>
@@ -255,7 +254,7 @@
         <!-- Footer -->
         <footer class="footer">
             <div class="footer-content">
-                <p>© 2026 GoldTracker EGP - Egypt's Premier Gold Price Tracking Platform</p>
+                <p>© 2026 SilverTracker EGP - Egypt's Premier Silver Price Tracking Platform</p>
                 <p class="disclaimer">Prices are for reference only. Always verify with official sources before
                     transactions.</p>
             </div>
@@ -263,7 +262,7 @@
     </div>
 
     <!-- Scripts -->
-    <script src="/js/app.js"></script>
+    <script src="/js/silver-app.js"></script>
 </body>
 
 </html>

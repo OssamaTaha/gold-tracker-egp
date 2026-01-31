@@ -23,3 +23,6 @@ https://localhost.run/docs/
 
 ** your connection id is bcba46b0-2680-4087-bc45-360b89741483, please mention it if you send me a message about an issue. **
 
+tcsetattr: Input/output error
+Connection to localhost.run closed.
+client_loop: send disconnect: Broken pipe

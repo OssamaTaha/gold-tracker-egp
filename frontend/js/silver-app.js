@@ -1,6 +1,6 @@
 /**
- * GoldTracker EGP - Main Application
- * Premium Gold Price Tracking Dashboard for Egypt
+ * SilverTracker EGP - Main Application
+ * Premium Silver Price Tracking Dashboard for Egypt
  */
 
 // ============================================================================
@@ -21,7 +21,7 @@ const state = {
     chart: null,
     areaSeries: null,
     currentPeriod: CONFIG.DEFAULT_PERIOD,
-    chartType: '24k', // '24k', '21k', '18k', '14k', 'oz'
+    chartType: '999', // '999', '925', '900', '800', 'oz'
     isLoading: false,
     lastUpdate: null
 };
@@ -35,8 +35,8 @@ const state = {
  */
 function formatPrice(value) {
     return new Intl.NumberFormat('en-EG', {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
     }).format(value);
 }
 
@@ -83,15 +83,15 @@ async function fetchAPI(endpoint) {
 /**
  * Update a single price card
  */
-function updatePriceCard(karat, data) {
-    const priceEl = document.getElementById(`price${karat}`);
-    const changeEl = document.getElementById(`change${karat}`);
+function updatePriceCard(purity, data) {
+    const priceEl = document.getElementById(`price${purity}`);
+    const changeEl = document.getElementById(`change${purity}`);
 
     if (!priceEl || !changeEl) return;
 
     // Determine value and formatting
-    const isOz = karat === 'oz';
-    const value = data.value || data; // Handle if data is just value or object
+    const isOz = purity === 'oz';
+    const value = data.value || data;
     const formattedPrice = isOz ? formatPriceUSD(value) : formatPrice(value);
 
     // Update price value
@@ -118,21 +118,21 @@ function updatePriceCard(karat, data) {
  */
 async function updatePrices() {
     try {
-        const data = await fetchAPI('/api/prices/current');
+        const data = await fetchAPI('/api/silver/prices/current');
 
         // Update timestamp
         state.lastUpdate = new Date(data.timestamp);
         updateLastUpdateDisplay();
 
-        // Update each karat card
-        updatePriceCard('24k', data.prices.karat_24);
-        updatePriceCard('21k', data.prices.karat_21);
-        updatePriceCard('18k', data.prices.karat_18);
-        updatePriceCard('14k', data.prices.karat_14);
+        // Update each purity card
+        updatePriceCard('999', data.prices.purity_999);
+        updatePriceCard('925', data.prices.purity_925);
+        updatePriceCard('900', data.prices.purity_900);
+        updatePriceCard('800', data.prices.purity_800);
 
         // Update Ounce card
-        if (data.gold_usd_oz) {
-            updatePriceCard('oz', data.gold_usd_oz);
+        if (data.silver_usd_oz) {
+            updatePriceCard('oz', data.silver_usd_oz);
         }
 
     } catch (error) {
@@ -145,8 +145,8 @@ async function updatePrices() {
  * Show error state for prices
  */
 function showPriceError() {
-    ['24k', '21k', '18k', '14k', 'oz'].forEach(karat => {
-        const priceEl = document.getElementById(`price${karat}`);
+    ['999', '925', '900', '800', 'oz'].forEach(purity => {
+        const priceEl = document.getElementById(`price${purity}`);
         if (priceEl) {
             priceEl.innerHTML = '--';
         }
@@ -181,7 +181,7 @@ function initChart() {
     const container = document.getElementById('candlestickChart');
     if (!container) return;
 
-    // Create chart with dark theme
+    // Create chart with dark theme and silver colors
     state.chart = LightweightCharts.createChart(container, {
         width: container.clientWidth,
         height: 400,
@@ -190,33 +190,33 @@ function initChart() {
             textColor: '#a0a0a0'
         },
         grid: {
-            vertLines: { color: 'rgba(212, 175, 55, 0.08)' },
-            horzLines: { color: 'rgba(212, 175, 55, 0.08)' }
+            vertLines: { color: 'rgba(192, 192, 192, 0.08)' },
+            horzLines: { color: 'rgba(192, 192, 192, 0.08)' }
         },
         crosshair: {
             mode: LightweightCharts.CrosshairMode.Normal,
             vertLine: {
-                color: 'rgba(212, 175, 55, 0.5)',
+                color: 'rgba(192, 192, 192, 0.5)',
                 width: 1,
                 style: LightweightCharts.LineStyle.Dashed,
-                labelBackgroundColor: '#d4af37'
+                labelBackgroundColor: '#C0C0C0'
             },
             horzLine: {
-                color: 'rgba(212, 175, 55, 0.5)',
+                color: 'rgba(192, 192, 192, 0.5)',
                 width: 1,
                 style: LightweightCharts.LineStyle.Dashed,
-                labelBackgroundColor: '#d4af37'
+                labelBackgroundColor: '#C0C0C0'
             }
         },
         rightPriceScale: {
-            borderColor: 'rgba(212, 175, 55, 0.2)',
+            borderColor: 'rgba(192, 192, 192, 0.2)',
             scaleMargins: {
                 top: 0.1,
                 bottom: 0.1
             }
         },
         timeScale: {
-            borderColor: 'rgba(212, 175, 55, 0.2)',
+            borderColor: 'rgba(192, 192, 192, 0.2)',
             timeVisible: true,
             secondsVisible: false
         },
@@ -231,15 +231,15 @@ function initChart() {
         }
     });
 
-    // Add area series with gold gradient
+    // Add area series with silver gradient
     state.areaSeries = state.chart.addAreaSeries({
-        topColor: 'rgba(212, 175, 55, 0.4)',
-        bottomColor: 'rgba(212, 175, 55, 0.0)',
-        lineColor: '#d4af37',
+        topColor: 'rgba(192, 192, 192, 0.4)',
+        bottomColor: 'rgba(192, 192, 192, 0.0)',
+        lineColor: '#C0C0C0',
         lineWidth: 2,
         crosshairMarkerVisible: true,
         crosshairMarkerRadius: 6,
-        crosshairMarkerBorderColor: '#d4af37',
+        crosshairMarkerBorderColor: '#C0C0C0',
         crosshairMarkerBackgroundColor: '#0a0a0a'
     });
 
@@ -276,7 +276,7 @@ function createPriceLegend(container) {
     `;
     legend.innerHTML = `
         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 4px;">
-            <span id="legend-title" style="color: #d4af37; font-weight: 600; font-size: 14px;">Gold Price (24K)</span>
+            <span id="legend-title" style="color: #C0C0C0; font-weight: 600; font-size: 14px;">Silver Price (999)</span>
             <span id="legend-currency" style="color: #666; font-size: 12px;">EGP/Gram</span>
         </div>
         <div style="display: flex; align-items: baseline; gap: 12px;">
@@ -298,10 +298,10 @@ function updatePriceLegend(param) {
     const currEl = document.getElementById('legend-currency');
 
     if (state.chartType === 'oz') {
-        titleEl.textContent = 'Gold Ounce (Global)';
+        titleEl.textContent = 'Silver Ounce (Global)';
         currEl.textContent = 'USD';
     } else {
-        titleEl.textContent = `Gold Price (${state.chartType.toUpperCase()})`;
+        titleEl.textContent = `Silver Price (${state.chartType})`;
         currEl.textContent = 'EGP/Gram';
     }
 
@@ -338,7 +338,7 @@ async function updateChart(period = null, type = null) {
     try {
         if (loadingEl) loadingEl.classList.remove('hidden');
 
-        const data = await fetchAPI(`/api/prices/ohlc?period=${state.currentPeriod}&type=${state.chartType}`);
+        const data = await fetchAPI(`/api/silver/prices/ohlc?period=${state.currentPeriod}&type=${state.chartType}`);
 
         if (data.data && data.data.length > 0) {
             // Convert OHLC data to line data (use close price)
@@ -415,7 +415,7 @@ async function updateNews() {
     if (!container) return;
 
     try {
-        const data = await fetchAPI('/api/news?limit=6');
+        const data = await fetchAPI('/api/silver/news?limit=6');
 
         if (data.news && data.news.length > 0) {
             container.innerHTML = data.news.map((item, index) => `
@@ -424,14 +424,14 @@ async function updateNews() {
                     <h3 class="news-title">${escapeHtml(item.title)}</h3>
                     <div class="news-meta">
                         <span class="news-source-badge">${escapeHtml(item.source)}</span>
-                        <span class="news-time">${item.relative_time || item.date}</span>
+                        <span class="news-time">${item.time_ago || item.date}</span>
                     </div>
                 </a>
             `).join('');
         } else {
             container.innerHTML = `
                 <div class="news-loading">
-                    <span>No news available at the moment</span>
+                    <span>No silver news available at the moment</span>
                 </div>
             `;
         }
@@ -509,7 +509,7 @@ function setupAutoRefresh() {
  * Initialize the application
  */
 async function init() {
-    console.log('🏆 GoldTracker EGP - Initializing...');
+    console.log('🥈 SilverTracker EGP - Initializing...');
 
     // Initialize chart
     initChart();
@@ -524,7 +524,7 @@ async function init() {
     // Setup auto-refresh
     setupAutoRefresh();
 
-    console.log('✅ GoldTracker EGP - Ready!');
+    console.log('✅ SilverTracker EGP - Ready!');
 }
 
 // Start the application when DOM is ready

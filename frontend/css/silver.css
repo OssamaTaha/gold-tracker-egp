@@ -1,6 +1,6 @@
 /* ============================================================================
-   GOLDTRACKER EGP - Premium Design System
-   Dark Theme with Gold Accents
+   SILVERTRACKER EGP - Premium Design System
+   Dark Theme with Silver Accents
    ============================================================================ */
 
 /* --------------------------------------------------------------------------
@@ -14,19 +14,19 @@
     --bg-card: rgba(20, 20, 20, 0.8);
     --bg-card-hover: rgba(30, 30, 30, 0.9);
 
-    /* Gold Palette */
-    --gold-dark: #8b7355;
-    --gold-primary: #d4af37;
-    --gold-bright: #ffd700;
-    --gold-light: #ffe066;
-    --gold-gradient: linear-gradient(135deg, #d4af37 0%, #ffd700 50%, #d4af37 100%);
-    --gold-gradient-text: linear-gradient(135deg, #ffd700, #d4af37, #ffd700);
+    /* Silver Palette */
+    --silver-dark: #808080;
+    --silver-primary: #C0C0C0;
+    --silver-bright: #E8E8E8;
+    --silver-light: #F5F5F5;
+    --silver-gradient: linear-gradient(135deg, #A8A8A8 0%, #E8E8E8 50%, #C0C0C0 100%);
+    --silver-gradient-text: linear-gradient(135deg, #E8E8E8, #C0C0C0, #E8E8E8);
 
     /* Text Colors */
     --text-primary: #ffffff;
     --text-secondary: #a0a0a0;
     --text-tertiary: #666666;
-    --text-gold: #d4af37;
+    --text-silver: #C0C0C0;
 
     /* Status Colors */
     --green: #00c853;
@@ -35,15 +35,15 @@
     --red-glow: rgba(255, 82, 82, 0.3);
 
     /* Effects */
-    --glow-gold: 0 0 20px rgba(212, 175, 55, 0.4);
-    --glow-gold-intense: 0 0 40px rgba(212, 175, 55, 0.6);
+    --glow-silver: 0 0 20px rgba(192, 192, 192, 0.4);
+    --glow-silver-intense: 0 0 40px rgba(192, 192, 192, 0.6);
     --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
     --glass-blur: blur(20px);
 
     /* Borders */
-    --border-subtle: 1px solid rgba(212, 175, 55, 0.2);
-    --border-gold: 1px solid rgba(212, 175, 55, 0.5);
-    --border-glow: 1px solid rgba(212, 175, 55, 0.8);
+    --border-subtle: 1px solid rgba(192, 192, 192, 0.2);
+    --border-silver: 1px solid rgba(192, 192, 192, 0.5);
+    --border-glow: 1px solid rgba(192, 192, 192, 0.8);
 
     /* Spacing */
     --spacing-xs: 4px;
@@ -125,7 +125,7 @@ body {
 .orb-1 {
     width: 600px;
     height: 600px;
-    background: radial-gradient(circle, rgba(212, 175, 55, 0.4) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(192, 192, 192, 0.4) 0%, transparent 70%);
     top: -200px;
     right: -200px;
 }
@@ -133,7 +133,7 @@ body {
 .orb-2 {
     width: 400px;
     height: 400px;
-    background: radial-gradient(circle, rgba(255, 215, 0, 0.3) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(232, 232, 232, 0.3) 0%, transparent 70%);
     bottom: -100px;
     left: -100px;
     animation-delay: -10s;
@@ -143,8 +143,8 @@ body {
     position: absolute;
     inset: 0;
     background-image:
-        linear-gradient(rgba(212, 175, 55, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(212, 175, 55, 0.03) 1px, transparent 1px);
+        linear-gradient(rgba(192, 192, 192, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(192, 192, 192, 0.03) 1px, transparent 1px);
     background-size: 50px 50px;
 }
 
@@ -207,14 +207,14 @@ body {
 .logo-icon svg {
     width: 100%;
     height: 100%;
-    filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.5));
+    filter: drop-shadow(0 0 10px rgba(192, 192, 192, 0.5));
 }
 
 .logo-text h1 {
     font-size: var(--font-size-3xl);
     font-weight: 700;
     letter-spacing: -0.02em;
-    background: var(--gold-gradient-text);
+    background: var(--silver-gradient-text);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -234,6 +234,23 @@ body {
     display: flex;
     align-items: center;
     gap: var(--spacing-md);
+}
+
+.nav-link {
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--bg-card);
+    border: var(--border-subtle);
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: var(--font-size-sm);
+    transition: all var(--transition-base);
+}
+
+.nav-link:hover {
+    border-color: var(--silver-primary);
+    color: var(--silver-bright);
+    box-shadow: var(--glow-silver);
 }
 
 .last-update {
@@ -279,15 +296,15 @@ body {
     background: var(--bg-card);
     border: var(--border-subtle);
     border-radius: var(--radius-md);
-    color: var(--text-gold);
+    color: var(--text-silver);
     cursor: pointer;
     transition: all var(--transition-base);
 }
 
 .refresh-btn:hover {
     background: var(--bg-card-hover);
-    border-color: var(--gold-primary);
-    box-shadow: var(--glow-gold);
+    border-color: var(--silver-primary);
+    box-shadow: var(--glow-silver);
 }
 
 .refresh-btn svg {
@@ -307,23 +324,6 @@ body {
     to {
         transform: rotate(360deg);
     }
-}
-
-.nav-link {
-    padding: var(--spacing-sm) var(--spacing-md);
-    background: var(--bg-card);
-    border: var(--border-subtle);
-    border-radius: var(--radius-md);
-    color: var(--text-secondary);
-    text-decoration: none;
-    font-size: var(--font-size-sm);
-    transition: all var(--transition-base);
-}
-
-.nav-link:hover {
-    border-color: var(--gold-primary);
-    color: var(--gold-bright);
-    box-shadow: var(--glow-gold);
 }
 
 /* --------------------------------------------------------------------------
@@ -348,7 +348,7 @@ body {
 .section-header h2 svg {
     width: 24px;
     height: 24px;
-    color: var(--gold-primary);
+    color: var(--silver-primary);
 }
 
 .currency-badge,
@@ -373,18 +373,6 @@ body {
     gap: var(--spacing-lg);
 }
 
-.chart-controls-group {
-    display: flex;
-    gap: var(--spacing-sm);
-    align-items: center;
-}
-
-.chart-controls-group:not(:last-child) {
-    margin-right: var(--spacing-lg);
-    padding-right: var(--spacing-lg);
-    border-right: 1px solid var(--bg-tertiary);
-}
-
 @media (max-width: 1024px) {
     .price-cards-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -401,7 +389,7 @@ body {
     position: relative;
     background: var(--bg-card);
     backdrop-filter: var(--glass-blur);
-    border: var(--border-gold);
+    border: var(--border-silver);
     border-radius: var(--radius-lg);
     padding: var(--spacing-lg);
     overflow: hidden;
@@ -410,8 +398,8 @@ body {
 
 .price-card:hover {
     transform: translateY(-4px);
-    border-color: var(--gold-bright);
-    box-shadow: var(--glow-gold-intense);
+    border-color: var(--silver-bright);
+    box-shadow: var(--glow-silver-intense);
 }
 
 .price-card .card-glow {
@@ -420,7 +408,7 @@ body {
     left: 0;
     right: 0;
     height: 2px;
-    background: var(--gold-gradient);
+    background: var(--silver-gradient);
     opacity: 0;
     transition: opacity var(--transition-base);
 }
@@ -439,8 +427,8 @@ body {
 .karat-badge {
     font-size: var(--font-size-lg);
     font-weight: 700;
-    color: var(--gold-bright);
-    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    color: var(--silver-bright);
+    text-shadow: 0 0 10px rgba(232, 232, 232, 0.5);
 }
 
 .karat-label {
@@ -460,7 +448,7 @@ body {
     font-size: var(--font-size-4xl);
     font-weight: 700;
     font-variant-numeric: tabular-nums;
-    background: var(--gold-gradient-text);
+    background: var(--silver-gradient-text);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -567,7 +555,7 @@ body {
 
 .timeframe-btn.active {
     color: var(--bg-primary);
-    background: var(--gold-gradient);
+    background: var(--silver-gradient);
     font-weight: 600;
 }
 
@@ -611,7 +599,7 @@ body {
     width: 40px;
     height: 40px;
     border: 3px solid var(--bg-tertiary);
-    border-top-color: var(--gold-primary);
+    border-top-color: var(--silver-primary);
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
@@ -695,8 +683,8 @@ body {
 
 .news-card:hover {
     transform: translateY(-2px);
-    border-color: var(--gold-primary);
-    box-shadow: var(--glow-gold);
+    border-color: var(--silver-primary);
+    box-shadow: var(--glow-silver);
 }
 
 .news-card .news-title {
@@ -712,7 +700,7 @@ body {
 }
 
 .news-card:hover .news-title {
-    color: var(--gold-bright);
+    color: var(--silver-bright);
 }
 
 .news-meta {
@@ -731,7 +719,7 @@ body {
 }
 
 .news-time {
-    color: var(--gold-dark);
+    color: var(--silver-dark);
 }
 
 /* --------------------------------------------------------------------------
@@ -759,18 +747,6 @@ body {
    -------------------------------------------------------------------------- */
 .hidden {
     display: none !important;
-}
-
-.visually-hidden {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
 }
 
 /* --------------------------------------------------------------------------
@@ -809,28 +785,8 @@ body {
     animation-delay: 0.4s;
 }
 
-.news-card:nth-child(1) {
-    animation-delay: 0.1s;
-}
-
-.news-card:nth-child(2) {
-    animation-delay: 0.15s;
-}
-
-.news-card:nth-child(3) {
-    animation-delay: 0.2s;
-}
-
-.news-card:nth-child(4) {
-    animation-delay: 0.25s;
-}
-
-.news-card:nth-child(5) {
-    animation-delay: 0.3s;
-}
-
-.news-card:nth-child(6) {
-    animation-delay: 0.35s;
+.price-card:nth-child(5) {
+    animation-delay: 0.5s;
 }
 
 /* --------------------------------------------------------------------------
@@ -841,7 +797,6 @@ body {
         padding: var(--spacing-md);
     }
 
-    /* Header Adjustments */
     .header {
         flex-direction: column;
         gap: var(--spacing-md);
@@ -859,29 +814,10 @@ body {
         justify-content: center;
     }
 
-    /* Chart Controls - Scrollable */
     .chart-controls {
         flex-direction: column;
         align-items: stretch;
         gap: var(--spacing-sm);
-    }
-
-    .chart-controls-group {
-        display: flex;
-        flex-direction: column;
-        align-items: stretch;
-        margin-right: 0;
-        padding-right: 0;
-        border-right: none;
-        padding-bottom: var(--spacing-sm);
-        border-bottom: 1px solid var(--bg-tertiary);
-        margin-bottom: var(--spacing-sm);
-    }
-
-    .chart-controls-group:last-child {
-        border-bottom: none;
-        margin-bottom: 0;
-        padding-bottom: 0;
     }
 
     .timeframe-selector {
@@ -890,7 +826,6 @@ body {
         padding: var(--spacing-xs);
         -webkit-overflow-scrolling: touch;
         justify-content: flex-start;
-        /* Hide scrollbar visually */
         scrollbar-width: none;
     }
 
@@ -903,7 +838,6 @@ body {
         padding: var(--spacing-sm) var(--spacing-md);
     }
 
-    /* Section Headers */
     .section-header {
         flex-direction: row;
         flex-wrap: wrap;
@@ -915,7 +849,6 @@ body {
         font-size: var(--font-size-lg);
     }
 
-    /* Price Cards */
     .price-cards-grid {
         gap: var(--spacing-md);
     }
@@ -924,12 +857,10 @@ body {
         font-size: var(--font-size-3xl);
     }
 
-    /* Chart Height */
     .chart-wrapper {
         height: 300px;
     }
 
-    /* Footer */
     .footer {
         padding: var(--spacing-lg) 0;
     }
